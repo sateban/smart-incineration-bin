@@ -1,8 +1,131 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-
+import 'package:multicast_dns/multicast_dns.dart';
 void main() {
-  runApp(const SmartBinDashboard());
+  // runApp(const SmartBinDashboard());
+  runApp(const SplashScreen());
+}
+
+class SplashScreen extends StatelessWidget {
+  const SplashScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'Smart Bin',
+      home: const GetStartedPage(), // 👈 start here first
+    );
+  }
+}
+
+class GetStartedPage extends StatelessWidget {
+  const GetStartedPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.grey[400], // gray background for the top
+      body: Column(
+        children: [
+          // 🟩 Top section with icon
+          Expanded(
+            flex: 2,
+            child: Center(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey[400],
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(0),
+                    topRight: Radius.circular(0),
+                  ),
+                ),
+                // child: const Icon(
+                //   Icons.image_outlined,
+                //   color: Colors.black54,
+                //   size: 80,
+                // ),
+              ),
+            ),
+          ),
+
+          // 🟦 Bottom section (white with rounded top)
+          Expanded(
+            flex: 2,
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(50),
+                  topRight: Radius.circular(50),
+                ),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text(
+                    'Smart Home Solution',
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w900,
+                      color: Color(0xFF1A1A1A),
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  // const SizedBox(height: 8),
+                  const Text(
+                    'Smart Hybrid Eco Incineration Bin',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Color.fromARGB(255, 56, 59, 65),
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 32 * 2),
+                  const Text(
+                    'Advanced waste disposal technology for modern sustainable living',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Color.fromARGB(255, 56, 59, 65),
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 40),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.black,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      minimumSize: const Size.fromHeight(70),
+                    ),
+                    onPressed: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SmartBinDashboard(),
+                        ),
+                      );
+                    },
+                    child: const Text(
+                      'GET STARTED',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class SmartBinDashboard extends StatefulWidget {
@@ -14,6 +137,8 @@ class SmartBinDashboard extends StatefulWidget {
 
 class _SmartBinDashboardState extends State<SmartBinDashboard> {
   int _selectedIndex = 0;
+  double heatLevel = 0.75; // 75%
+  double timerValue = 0.5; // 30 min
 
   static const primaryColor = Color(0xFF38E07B);
   static const backgroundColor = Color(0xFFF7F8FA);
@@ -34,7 +159,7 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
           backgroundColor: backgroundColor,
           elevation: 0,
           title: const Text(
-            "Bin",
+            "Smart Hybrid Eco Incineration Bin",
             style: TextStyle(
               color: foregroundColor,
               fontWeight: FontWeight.bold,
@@ -92,60 +217,49 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
   Widget _buildDashboard() {
     return Column(
       children: [
+        Text(
+          "Monitor and control operations",
+          style: TextStyle(
+            fontSize: 16,
+            // color: primaryColor,
+            // fontWeight: FontWeight.bold,
+          ),
+        ),
         const SizedBox(height: 24),
-        Center(
-          child: Stack(
-            alignment: Alignment.center,
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              Container(
-                width: 280,
-                height: 280,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: mutedColor, width: 20),
+              Expanded(
+                child: _controlCard(
+                  icon: Icons.local_fire_department_outlined,
+                  title: "Heat Level",
+                  sliderValue: heatLevel,
+                  onChanged: (v) {
+                    setState(() => heatLevel = v);
+                  },
+                  valueText: "${(heatLevel * 100).round()}%",
+                  subText: "${(heatLevel * 1200).round()}°C",
                 ),
               ),
-              Transform.rotate(
-                angle: 0.785, // 45 degrees
-                child: Container(
-                  width: 280,
-                  height: 280,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(color: primaryColor, width: 20),
-                  ),
-                ),
-              ),
-              Container(
-                width: 200,
-                height: 200,
-                decoration: BoxDecoration(
-                  color: primaryColor.withOpacity(0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
-                    Icon(
-                      Icons.local_fire_department,
-                      color: primaryColor,
-                      size: 64,
-                    ),
-                    SizedBox(height: 8),
-                    Text(
-                      "750°C",
-                      style: TextStyle(
-                        fontSize: 32,
-                        color: primaryColor,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
+              const SizedBox(width: 16),
+              Expanded(
+                child: _controlCard(
+                  icon: Icons.timer_outlined,
+                  title: "Timer Set",
+                  sliderValue: timerValue,
+                  onChanged: (v) {
+                    setState(() => timerValue = v);
+                  },
+                  valueText: "${(timerValue * 60).round()} min",
+                  subText: "Duration",
                 ),
               ),
             ],
           ),
         ),
+
         const SizedBox(height: 24),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -366,4 +480,78 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
     print('Response: ${response.body}');
   }
 
+  Widget _controlCard({
+    required IconData icon,
+    required String title,
+    required double sliderValue,
+    required ValueChanged<double> onChanged,
+    required String valueText,
+    required String subText,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.black.withOpacity(0.3)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 5,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 20, color: Colors.black),
+              const SizedBox(width: 6),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 15,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          SliderTheme(
+            data: SliderThemeData(
+              trackHeight: 10,
+              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
+              overlayShape: SliderComponentShape.noOverlay,
+            ),
+            child: Slider(
+              value: sliderValue,
+              onChanged: onChanged,
+              activeColor: Colors.black,
+              inactiveColor: Colors.grey[300],
+            ),
+          ),
+          const SizedBox(height: 4),
+          Center(
+            child: Column(
+              children: [
+                Text(
+                  valueText,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 16,
+                  ),
+                ),
+                Text(
+                  subText,
+                  style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
