@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:multicast_dns/multicast_dns.dart';
+
 void main() {
   // runApp(const SmartBinDashboard());
   runApp(const SplashScreen());
@@ -470,14 +471,28 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
   }
 
   Future<void> setLedLight(status) async {
-    final url = Uri.parse('http://192.168.1.8/led');
-    final response = await http.post(
-      url,
-      headers: {'Content-Type': 'text/plain'},
-      body: status, // or 'OFF'
-    );
+    // final url = Uri.parse('http://192.168.1.8/led');
+    // final response = await http.post(
+    //   url,
+    //   headers: {'Content-Type': 'text/plain'},
+    //   body: status, // or 'OFF'
+    // );
 
-    print('Response: ${response.body}');
+    // print('Response: ${response.body}');
+
+    final MDnsClient client = MDnsClient();
+    await client.start();
+
+    await for (final PtrResourceRecord ptr in client.lookup<PtrResourceRecord>(
+      ResourceRecordQuery.serverPointer('_http._tcp.local'),
+    )) {
+      await for (final SrvResourceRecord srv
+          in client.lookup<SrvResourceRecord>(
+            ResourceRecordQuery.service(ptr.domainName),
+          )) {
+        print('Found device: ${srv.target} at port ${srv.port}');
+      }
+    }
   }
 
   Widget _controlCard({
