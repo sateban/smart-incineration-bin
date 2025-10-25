@@ -143,6 +143,8 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
   int _selectedIndex = 0;
   double heatLevel = 0.75; // 75%
   double timerValue = 0.5; // 30 min
+  double tMin = 100;
+double tMax = 1200;
 
   static const primaryColor = Color(0xFF38E07B);
   static const backgroundColor = Color(0xFFF7F8FA);
@@ -243,8 +245,13 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
                   onChanged: (v) {
                     setState(() => heatLevel = v);
                   },
-                  valueText: "${(heatLevel * 100).round()}%",
-                  subText: "${(heatLevel * 1200).round()}°C",
+                  // valueText: "${(heatLevel * 100).round()}%",
+                  // subText: "${(heatLevel * 1200).round()}°C",
+                  min: 0,
+                  max: 100,
+                  divisions: 100,
+                  valueText: "${(heatLevel).round()}%",
+                  subText: "${(tMin + ((heatLevel - 1) / (100 - 1)) * (tMax - tMin)).round()}°C",
                 ),
               ),
               const SizedBox(width: 16),
@@ -254,9 +261,14 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
                   title: "Timer Set",
                   sliderValue: timerValue,
                   onChanged: (v) {
+                    // setState(() => timerValue = v);
                     setState(() => timerValue = v);
                   },
-                  valueText: "${(timerValue * 60).round()} min",
+                  // valueText: "${(timerValue * 60).round()} min",
+                  min: 0,
+                  max: 60,
+                  divisions: 12,
+                  valueText: "${(timerValue).round()} min",
                   subText: "Duration",
                 ),
               ),
@@ -265,53 +277,54 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
         ),
 
         const SizedBox(height: 24),
+
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Column(
             children: [
-              Container(
-                decoration: BoxDecoration(
-                  color: cardColor,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: mutedColor),
-                ),
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: const [
-                        Text(
-                          "Incineration",
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            color: foregroundColor,
-                          ),
-                        ),
-                        Text(
-                          "Active",
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            color: primaryColor,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(50),
-                      child: LinearProgressIndicator(
-                        value: 0.75,
-                        minHeight: 10,
-                        backgroundColor: mutedColor,
-                        valueColor: const AlwaysStoppedAnimation(primaryColor),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
+              // Container(
+              //   decoration: BoxDecoration(
+              //     color: cardColor,
+              //     borderRadius: BorderRadius.circular(20),
+              //     border: Border.all(color: mutedColor),
+              //   ),
+              //   padding: const EdgeInsets.all(16),
+              //   child: Column(
+              //     crossAxisAlignment: CrossAxisAlignment.start,
+              //     children: [
+              //       Row(
+              //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              //         children: const [
+              //           Text(
+              //             "Incineration",
+              //             style: TextStyle(
+              //               fontWeight: FontWeight.w600,
+              //               color: foregroundColor,
+              //             ),
+              //           ),
+              //           Text(
+              //             "Active",
+              //             style: TextStyle(
+              //               fontWeight: FontWeight.w600,
+              //               color: primaryColor,
+              //             ),
+              //           ),
+              //         ],
+              //       ),
+              //       const SizedBox(height: 8),
+              //       ClipRRect(
+              //         borderRadius: BorderRadius.circular(50),
+              //         child: LinearProgressIndicator(
+              //           value: 0.75,
+              //           minHeight: 10,
+              //           backgroundColor: mutedColor,
+              //           valueColor: const AlwaysStoppedAnimation(primaryColor),
+              //         ),
+              //       ),
+              //     ],
+              //   ),
+              // ),
+              // const SizedBox(height: 16),
               Container(
                 decoration: BoxDecoration(
                   color: cardColor,
@@ -372,7 +385,9 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
             ],
           ),
         ),
+        
         const Spacer(),
+        
         Padding(
           padding: const EdgeInsets.all(16),
           child: Row(
@@ -501,6 +516,9 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
     required String title,
     required double sliderValue,
     required ValueChanged<double> onChanged,
+    required double min,
+    required double max,
+    required int divisions,
     required String valueText,
     required String subText,
   }) {
@@ -542,6 +560,9 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
               overlayShape: SliderComponentShape.noOverlay,
             ),
             child: Slider(
+              min: min,
+              max: max,
+              divisions: divisions,
               value: sliderValue,
               onChanged: onChanged,
               activeColor: Colors.black,
