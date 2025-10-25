@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:logger/logger.dart';
 import 'package:http/http.dart' as http;
-import 'package:multicast_dns/multicast_dns.dart';
+// import 'package:multicast_dns/multicast_dns.dart';
+
+var _logger = new Logger();
 
 void main() {
   // runApp(const SmartBinDashboard());
@@ -322,7 +325,7 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
                       width: 48,
                       height: 48,
                       decoration: BoxDecoration(
-                        color: Colors.yellow.withOpacity(0.2),
+                        color: Colors.yellow.withValues(alpha: 0.2),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
@@ -478,7 +481,7 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
       body: status, // or 'OFF'
     );
 
-    print('Response: ${response.body}');
+    _logger.i('Response: ${response.body}');
 
     // final MDnsClient client = MDnsClient();
     // await client.start();
