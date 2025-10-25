@@ -3,7 +3,7 @@ import 'package:logger/logger.dart';
 import 'package:http/http.dart' as http;
 // import 'package:multicast_dns/multicast_dns.dart';
 
-var _logger = new Logger();
+var _logger = Logger();
 
 void main() {
   // runApp(const SmartBinDashboard());
@@ -474,30 +474,27 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
   }
 
   Future<void> setLedLight(status) async {
-    final url = Uri.parse('http://esp8266-device.local/led');
-    final response = await http.post(
-      url,
-      headers: {'Content-Type': 'text/plain'},
-      body: status, // or 'OFF'
-    );
+    try {
+      final url = Uri.parse('http://esp8266-device.local/led');
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'text/plain'},
+        body: status, // e.g. 'ON' or 'OFF'
+      );
 
-    _logger.i('Response: ${response.body}');
-
-    // final MDnsClient client = MDnsClient();
-    // await client.start();
-
-    // await for (final PtrResourceRecord ptr in client.lookup<PtrResourceRecord>(
-    //   ResourceRecordQuery.serverPointer('_http._tcp.local'),
-    // )) {
-    //   await for (final SrvResourceRecord srv
-    //       in client.lookup<SrvResourceRecord>(
-    //         ResourceRecordQuery.service(ptr.domainName),
-    //       )) {
-    //     print('Found device: ${srv.target} at port ${srv.port}');
-    //   }
-    // }
+      if (response.statusCode == 200) {
+        _logger.i('LED updated successfully: ${response.body}');
+      } else {
+        _logger.w(
+          'Unexpected status: ${response.statusCode} - ${response.body}',
+        );
+      }
+    } catch (e, stackTrace) {
+      _logger.e('Error sending request to ESP8266: $e, $stackTrace');
+    } finally {
+      _logger.i('Request to ESP8266 completed.');
+    }
   }
-
 
   Widget _controlCard({
     required IconData icon,
@@ -512,10 +509,10 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.black.withOpacity(0.3)),
+        border: Border.all(color: Colors.black.withValues(alpha: 0.3)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 5,
             offset: const Offset(0, 3),
           ),
