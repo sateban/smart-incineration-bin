@@ -144,7 +144,7 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
   double heatLevel = 0.75; // 75%
   double timerValue = 0.5; // 30 min
   double tMin = 100;
-double tMax = 1200;
+  double tMax = 1200;
 
   static const primaryColor = Color(0xFF38E07B);
   static const backgroundColor = Color(0xFFF7F8FA);
@@ -232,6 +232,8 @@ double tMax = 1200;
           ),
         ),
         const SizedBox(height: 24),
+
+        // Heat Level and Timer
         Padding(
           padding: const EdgeInsets.all(16.0),
           child: Row(
@@ -251,14 +253,15 @@ double tMax = 1200;
                   max: 100,
                   divisions: 100,
                   valueText: "${(heatLevel).round()}%",
-                  subText: "${(tMin + ((heatLevel - 1) / (100 - 1)) * (tMax - tMin)).round()}°C",
+                  subText:
+                      "${(tMin + ((heatLevel - 1) / (100 - 1)) * (tMax - tMin)).round()}°C",
                 ),
               ),
               const SizedBox(width: 16),
               Expanded(
                 child: _controlCard(
                   icon: Icons.timer_outlined,
-                  title: "Timer Set",
+                  title: "Timer",
                   sliderValue: timerValue,
                   onChanged: (v) {
                     // setState(() => timerValue = v);
@@ -276,118 +279,266 @@ double tMax = 1200;
           ),
         ),
 
-        const SizedBox(height: 24),
+        const SizedBox(height: 14),
 
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Column(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              // Container(
-              //   decoration: BoxDecoration(
-              //     color: cardColor,
-              //     borderRadius: BorderRadius.circular(20),
-              //     border: Border.all(color: mutedColor),
-              //   ),
-              //   padding: const EdgeInsets.all(16),
-              //   child: Column(
-              //     crossAxisAlignment: CrossAxisAlignment.start,
-              //     children: [
-              //       Row(
-              //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              //         children: const [
-              //           Text(
-              //             "Incineration",
-              //             style: TextStyle(
-              //               fontWeight: FontWeight.w600,
-              //               color: foregroundColor,
-              //             ),
-              //           ),
-              //           Text(
-              //             "Active",
-              //             style: TextStyle(
-              //               fontWeight: FontWeight.w600,
-              //               color: primaryColor,
-              //             ),
-              //           ),
-              //         ],
-              //       ),
-              //       const SizedBox(height: 8),
-              //       ClipRRect(
-              //         borderRadius: BorderRadius.circular(50),
-              //         child: LinearProgressIndicator(
-              //           value: 0.75,
-              //           minHeight: 10,
-              //           backgroundColor: mutedColor,
-              //           valueColor: const AlwaysStoppedAnimation(primaryColor),
-              //         ),
-              //       ),
-              //     ],
-              //   ),
-              // ),
-              // const SizedBox(height: 16),
-              Container(
-                decoration: BoxDecoration(
-                  color: cardColor,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: mutedColor),
-                ),
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: Colors.yellow.withValues(alpha: 0.2),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.delete,
-                        color: Colors.amber,
-                        size: 28,
-                      ),
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Colors.black.withValues(alpha: 0.3),
                     ),
-                    const SizedBox(width: 16),
-                    const Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 5,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
                         children: [
-                          Text(
-                            "Ash Tray Full",
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              color: foregroundColor,
-                            ),
-                          ),
-                          Text(
-                            "Please empty the ash tray to continue.",
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: mutedForeground,
-                            ),
+                          Icon(Icons.thermostat, size: 40, color: Colors.black),
+                          const SizedBox(width: 6),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                "Chamber Temperature",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 15,
+                                ),
+                              ),
+                              Text(
+                                "25°C",
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 24,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                    ),
-                    TextButton(
-                      onPressed: () {},
-                      child: const Text(
-                        "Empty",
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: primaryColor,
+                      const SizedBox(height: 12),
+                      Center(
+                        child: Column(
+                          children: [
+                            // Text(
+                            //   "Test",
+                            //   style: const TextStyle(
+                            //     fontWeight: FontWeight.w700,
+                            //     fontSize: 16,
+                            //   ),
+                            // ),
+                            LinearProgressIndicator(
+                              value: 0.40,
+                              minHeight: 10,
+                              backgroundColor: Colors.grey[300],
+                              valueColor: AlwaysStoppedAnimation(Colors.red),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ],
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
+              const SizedBox(width: 16),
             ],
           ),
         ),
-        
+
+        const SizedBox(height: 14),
+
+        // Smoke and Timer
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Colors.black.withValues(alpha: 0.3),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 5,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.ac_unit_outlined,
+                            size: 20,
+                            color: Colors.black,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            "Smoke\nPurification",
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 15,
+                            ),
+                          ),
+                        ],
+                      
+                      ),
+                      const SizedBox(height: 12),
+                      // SliderTheme(
+                      //   data: SliderThemeData(
+                      //     trackHeight: 10,
+                      //     thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
+                      //     overlayShape: SliderComponentShape.noOverlay,
+                      //   ),
+                      //   child: Slider(
+                      //     min: min,
+                      //     max: max,
+                      //     divisions: divisions,
+                      //     value: sliderValue,
+                      //     onChanged: onChanged,
+                      //     activeColor: Colors.black,
+                      //     inactiveColor: Colors.grey[300],
+                      //   ),
+                      // ),
+                      const SizedBox(height: 4),
+                      Center(
+                        child: Column(
+                          children: [
+                            Text(
+                              "INACTIVE",
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 16,
+                              ),
+                            ),
+                            // Text(
+                            //   "System Standby",
+                            //   style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                            // ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+               
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Colors.black.withValues(alpha: 0.3),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 5,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.timer_outlined,
+                            size: 20,
+                            color: Colors.black,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            "Timer",
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 15,
+                            ),
+                          ),
+                        ],
+                      
+                      ),
+                      const SizedBox(height: 12),
+                      // SliderTheme(
+                      //   data: SliderThemeData(
+                      //     trackHeight: 10,
+                      //     thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
+                      //     overlayShape: SliderComponentShape.noOverlay,
+                      //   ),
+                      //   child: Slider(
+                      //     min: min,
+                      //     max: max,
+                      //     divisions: divisions,
+                      //     value: sliderValue,
+                      //     onChanged: onChanged,
+                      //     activeColor: Colors.black,
+                      //     inactiveColor: Colors.grey[300],
+                      //   ),
+                      // ),
+                      const SizedBox(height: 4),
+                      Center(
+                        child: Column(
+                          children: [
+                            Text(
+                              "Time Remaining",
+                              style: const TextStyle(
+                                // fontWeight: FontWeight.w700,
+                                fontSize: 16,
+                              ),
+                            ),
+                            Text(
+                              "00:00:00",
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 20,
+                              ),
+                            ),
+                            // Text(
+                            //   "System Standby",
+                            //   style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                            // ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            
+            ],
+          ),
+        ),
+
         const Spacer(),
-        
+
         Padding(
           padding: const EdgeInsets.all(16),
           child: Row(
