@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
 import 'package:http/http.dart' as http;
 // import 'package:multicast_dns/multicast_dns.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 var _logger = Logger();
 
@@ -657,6 +658,16 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
       }
     } catch (e, stackTrace) {
       _logger.e('Error sending request to ESP8266: $e, $stackTrace');
+
+      Fluttertoast.showToast(
+        msg: 'Error sending request to ESP8266: $e',
+        toastLength: Toast.LENGTH_SHORT, // Auto-hides after ~2 sec
+        gravity: ToastGravity.BOTTOM, // You can use CENTER or TOP
+        backgroundColor: Colors.black87,
+        textColor: Colors.white,
+        fontSize: 16.0,
+      );
+
     } finally {
       _logger.i('Request to ESP8266 completed.');
     }
