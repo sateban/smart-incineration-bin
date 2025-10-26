@@ -145,7 +145,7 @@ class SmartBinDashboard extends StatefulWidget {
 class _SmartBinDashboardState extends State<SmartBinDashboard> {
   int _selectedIndex = 0;
   double heatLevel = 0.75; // 75%
-  double timerValue = 0.5; // 30 min
+  double timerValue = 0; // 30 min
   double tMin = 100;
   double tMax = 1200;
 
@@ -593,7 +593,12 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
                     minimumSize: const Size.fromHeight(56),
                   ),
                   onPressed: () async {
-                    setLedLight("OFF");
+                    bool start = await setLedLight("OFF");
+
+                    _logger.i("Start Status: $start");
+                    if (start) {
+                      startTimer(0);
+                    }
                   },
                   child: const Text(
                     "Stop",
@@ -615,9 +620,12 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
                   onPressed: () async {
                     bool start = await setLedLight("ON");
 
+                    _logger.i("Start Status: $start");
                     if (start) {
                       // startTimer(timerValue.toInt() * 60);
-                      startTimer(timerValue.toInt() * 60);
+                      // _logger.i("Start Status: ${timerValue.toInt()}");
+                      startTimer((timerValue == 0 ? 1 : timerValue).toInt() * 60);
+                      // startTimer(timerValue.toInt() * 60);
                     }
                   },
                   child: const Text(
@@ -685,6 +693,7 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
 
   Future<bool> setLedLight(status) async {
     bool responseStatus = false;
+
     try {
       final url = Uri.parse('http://esp8266-device.local/led');
       final response = await http.post(
