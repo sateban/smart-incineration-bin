@@ -5,6 +5,7 @@ import 'package:logger/logger.dart';
 import 'package:http/http.dart' as http;
 // import 'package:multicast_dns/multicast_dns.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 var _logger = Logger();
 
@@ -209,6 +210,7 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
             "Smart Hybrid Eco Incineration Bin",
             style: TextStyle(
               color: foregroundColor,
+              fontSize: 20,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -320,8 +322,9 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
           ),
         ),
 
-        const SizedBox(height: 14),
+        const SizedBox(height: 7),
 
+        // Chamber Temperature
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Row(
@@ -402,7 +405,7 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
           ),
         ),
 
-        const SizedBox(height: 14),
+        const SizedBox(height: 7),
 
         // Smoke and Timer
         Padding(
@@ -432,10 +435,20 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
                     children: [
                       Row(
                         children: [
-                          Icon(
-                            Icons.ac_unit_outlined,
-                            size: 20,
-                            color: Colors.black,
+                          // Icon(
+                          //   // Icons.ac_unit_outlined,
+                          //   Icons.ac_unit_outlined,
+                          //   size: 20,
+                          //   color: Colors.black,
+                          // ),
+                          SvgPicture.asset(
+                            'assets/images/air-filter.svg',
+                            width: 20,
+                            height: 20,
+                            colorFilter: const ColorFilter.mode(
+                              Colors.black,
+                              BlendMode.srcIn,
+                            ),
                           ),
                           const SizedBox(width: 6),
                           Text(
@@ -576,6 +589,123 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
           ),
         ),
 
+        // Process Progress
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Colors.black.withValues(alpha: 0.3),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 5,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.info, size: 20, color: Colors.black),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: const [
+                                Text(
+                                  "Process Progress",
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 15,
+                                  ),
+                                ),
+                                Text(
+                                  "0%",
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 15,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      // Progress Bar
+                      const SizedBox(height: 16),
+                      Center(
+                        child: Column(
+                          children: [
+                            LinearProgressIndicator(
+                              value: 0.40,
+                              minHeight: 10,
+                              backgroundColor: Colors.grey[300],
+                              valueColor: AlwaysStoppedAnimation(Colors.red),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ],
+                        ),
+                      ),
+                      
+                      const SizedBox(height: 4),
+
+                      // 
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: const [
+                          Text(
+                            "Idle",
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.black54,
+                            ),
+                          ),
+                          Text(
+                            "Heating",
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.black54,
+                            ),
+                          ),
+                          Text(
+                            "Incinerating",
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.black54,
+                            ),
+                          ),
+                          Text(
+                            "Complete",
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.black54,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+            ],
+          ),
+        ),
+
+        // Start and Stop
         const Spacer(),
 
         Padding(
@@ -624,7 +754,9 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
                     if (start) {
                       // startTimer(timerValue.toInt() * 60);
                       // _logger.i("Start Status: ${timerValue.toInt()}");
-                      startTimer((timerValue == 0 ? 1 : timerValue).toInt() * 60);
+                      startTimer(
+                        (timerValue == 0 ? 1 : timerValue).toInt() * 60,
+                      );
                       // startTimer(timerValue.toInt() * 60);
                     }
                   },
@@ -720,7 +852,7 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
           'Unexpected status: ${response.statusCode} - ${response.body}',
         );
 
-         Fluttertoast.showToast(
+        Fluttertoast.showToast(
           msg: 'Unexpected status: ${response.statusCode}',
           toastLength: Toast.LENGTH_SHORT, // Auto-hides after ~2 sec
           gravity: ToastGravity.BOTTOM, // You can use CENTER or TOP
