@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
 import 'package:http/http.dart' as http;
@@ -147,12 +149,50 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
   double tMin = 100;
   double tMax = 1200;
 
+  // For Timer
+  Timer? _timer;
+  int _remainingSeconds = 0;
+
   static const primaryColor = Color(0xFF38E07B);
   static const backgroundColor = Color(0xFFF7F8FA);
   static const mutedColor = Color(0xFFE5E7EB);
   static const mutedForeground = Color(0xFF6B7280);
   static const cardColor = Colors.white;
   static const foregroundColor = Color(0xFF1A1A1A);
+
+  // Timer
+  void startTimer(int seconds) {
+    setState(() {
+      _remainingSeconds = seconds;
+    });
+
+    _timer?.cancel(); // cancel any existing timer before starting a new one
+
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_remainingSeconds > 0) {
+        setState(() {
+          _remainingSeconds--;
+        });
+      } else {
+        timer.cancel();
+      }
+    });
+  }
+
+  String formatTime(int seconds) {
+    final hours = seconds ~/ 3600;
+    final minutes = (seconds % 3600) ~/ 60;
+    final secs = seconds % 60;
+    return '${hours.toString().padLeft(2, '0')}:'
+        '${minutes.toString().padLeft(2, '0')}:'
+        '${secs.toString().padLeft(2, '0')}';
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -204,10 +244,10 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
               icon: Icon(Icons.home_outlined),
               label: 'Home',
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.bar_chart_outlined),
-              label: 'Stats',
-            ),
+            // BottomNavigationBarItem(
+            //   icon: Icon(Icons.bar_chart_outlined),
+            //   label: 'Stats',
+            // ),
             BottomNavigationBarItem(
               icon: Icon(Icons.settings_outlined),
               label: 'Settings',
@@ -406,7 +446,6 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
                             ),
                           ),
                         ],
-                      
                       ),
                       const SizedBox(height: 12),
                       // SliderTheme(
@@ -448,7 +487,7 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
                 ),
               ),
               const SizedBox(width: 16),
-               
+
               Expanded(
                 child: Container(
                   padding: const EdgeInsets.all(16),
@@ -485,7 +524,6 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
                             ),
                           ),
                         ],
-                      
                       ),
                       const SizedBox(height: 12),
                       // SliderTheme(
@@ -516,7 +554,8 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
                               ),
                             ),
                             Text(
-                              "00:00:00",
+                              // "00:00:00",
+                              formatTime(_remainingSeconds),
                               style: const TextStyle(
                                 fontWeight: FontWeight.w700,
                                 fontSize: 20,
@@ -533,7 +572,6 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
                   ),
                 ),
               ),
-            
             ],
           ),
         ),
@@ -575,7 +613,12 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
                     minimumSize: const Size.fromHeight(56),
                   ),
                   onPressed: () async {
-                    setLedLight("ON");
+                    bool start = await setLedLight("ON");
+
+                    if (start) {
+                      // startTimer(timerValue.toInt() * 60);
+                      startTimer(timerValue.toInt() * 60);
+                    }
                   },
                   child: const Text(
                     "Start",
@@ -640,7 +683,8 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
     );
   }
 
-  Future<void> setLedLight(status) async {
+  Future<bool> setLedLight(status) async {
+    bool responseStatus = false;
     try {
       final url = Uri.parse('http://esp8266-device.local/led');
       final response = await http.post(
@@ -651,9 +695,29 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
 
       if (response.statusCode == 200) {
         _logger.i('LED updated successfully: ${response.body}');
+
+        Fluttertoast.showToast(
+          msg: "${status == "ON" ? "Starting" : "Stopping"} Incinerator",
+          toastLength: Toast.LENGTH_SHORT, // Auto-hides after ~2 sec
+          gravity: ToastGravity.BOTTOM, // You can use CENTER or TOP
+          backgroundColor: Colors.black87,
+          textColor: Colors.white,
+          fontSize: 16.0,
+        );
+
+        responseStatus = true;
       } else {
         _logger.w(
           'Unexpected status: ${response.statusCode} - ${response.body}',
+        );
+
+         Fluttertoast.showToast(
+          msg: 'Unexpected status: ${response.statusCode}',
+          toastLength: Toast.LENGTH_SHORT, // Auto-hides after ~2 sec
+          gravity: ToastGravity.BOTTOM, // You can use CENTER or TOP
+          backgroundColor: Colors.black87,
+          textColor: Colors.white,
+          fontSize: 16.0,
         );
       }
     } catch (e, stackTrace) {
@@ -667,10 +731,11 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
         textColor: Colors.white,
         fontSize: 16.0,
       );
-
     } finally {
       _logger.i('Request to ESP8266 completed.');
     }
+
+    return responseStatus;
   }
 
   Widget _controlCard({
