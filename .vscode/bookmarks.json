@@ -4,33 +4,53 @@
 			"path": "lib/main.dart",
 			"bookmarks": [
 				{
-					"line": 146,
-					"column": 29,
+					"line": 184,
+					"column": 9,
 					"label": ""
 				},
 				{
-					"line": 308,
-					"column": 29,
+					"line": 461,
+					"column": 33,
+					"label": "Setting Timer"
+				},
+				{
+					"line": 475,
+					"column": 37,
 					"label": ""
 				},
 				{
-					"line": 313,
-					"column": 61,
+					"line": 769,
+					"column": 41,
 					"label": ""
 				},
 				{
-					"line": 323,
-					"column": 8,
+					"line": 791,
+					"column": 49,
 					"label": ""
 				},
 				{
-					"line": 324,
-					"column": 16,
+					"line": 891,
+					"column": 31,
 					"label": ""
 				},
 				{
-					"line": 619,
-					"column": 43,
+					"line": 899,
+					"column": 20,
+					"label": ""
+				},
+				{
+					"line": 946,
+					"column": 31,
+					"label": ""
+				},
+				{
+					"line": 950,
+					"column": 31,
+					"label": ""
+				},
+				{
+					"line": 1046,
+					"column": 6,
 					"label": ""
 				}
 			]
