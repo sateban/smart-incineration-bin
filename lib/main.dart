@@ -410,6 +410,7 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
             ),
           ],
         ),
+     
       ),
     );
   }
@@ -868,8 +869,8 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
                           );
 
                           bool start = await sendCommand(
-                            // "timer:${timerValue.toInt() * 60}",
-                            "timer:${12}",
+                            "timer:${timerValue.toInt() * 60}",
+                            // "timer:${12}",
                           );
                           // animateProgressBar();
 
