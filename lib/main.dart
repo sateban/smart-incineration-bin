@@ -9,6 +9,10 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:permission_handler/permission_handler.dart';
+
+
 var _logger = Logger();
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
@@ -21,11 +25,22 @@ void main() async {
   // Initialize notification settings
   const AndroidInitializationSettings androidInitSettings =
       AndroidInitializationSettings('@mipmap/ic_launcher');
+  const DarwinInitializationSettings iOSSettings = DarwinInitializationSettings(
+    requestAlertPermission: true,
+    requestBadgePermission: true,
+    requestSoundPermission: true,
+  );
   const InitializationSettings initSettings = InitializationSettings(
     android: androidInitSettings,
+    iOS: iOSSettings,
   );
 
-  await flutterLocalNotificationsPlugin.initialize(initSettings);
+  await flutterLocalNotificationsPlugin.initialize(
+    initSettings,
+    onDidReceiveNotificationResponse: (details) {
+      // Handle notification tap
+    },
+  );
 
   runApp(SplashScreen(hasSeenGetStarted: hasSeenGetStarted));
 }
@@ -269,11 +284,18 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
     _logger.d("🛑 Auto request stopped");
   }
 
+
   @override
   void initState() {
     super.initState();
     // animateProgressBar(); // start animation automatically
     startAutoRequest();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    requestNotificationPermission();
   }
 
   // Status checker
@@ -900,7 +922,9 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
                           if (start) {
                             isTimerStarted = true;
                             startTimer(timerValue.toInt() * 60);
-                            // _logger.i("Start Status: ${timerValue.toInt()}");
+                            showNotification("Smart Hybrid Eco Bin", "Device has started");
+
+                            _logger.i("Start Status: ${timerValue.toInt()}");
 
                             // Check status occassionaly
                             checkStatus();
@@ -958,6 +982,7 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
                             startTimer(0);
                           }
 
+                          hideNotification();
                           isTimerStarted = false;
                         }
                       : null,
@@ -1104,6 +1129,10 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
     );
   }
 
+  Future<void> hideNotification() async {
+    await flutterLocalNotificationsPlugin.cancel(0);
+  }
+
   Future<void> readSensorDetails() async {
     try {
       final url = Uri.parse('http://esp8266-device.local/info');
@@ -1225,4 +1254,28 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
       ),
     );
   }
+
+  Future<void> requestNotificationPermission() async {
+  // Android 13+ (API 33+) requires runtime permission
+  if (Theme.of(context).platform == TargetPlatform.android) {
+    final deviceInfo = DeviceInfoPlugin();
+    final androidInfo = await deviceInfo.androidInfo;
+    if (androidInfo.version.sdkInt >= 33) {
+      final permission = await Permission.notification.request();
+      if (!permission.isGranted) {
+        // Optionally show a dialog to the user
+      }
+    }
+  }
+  // iOS
+  if (Theme.of(context).platform == TargetPlatform.iOS) {
+    await flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>()
+        ?.requestPermissions(
+          alert: true,
+          badge: true,
+          sound: true,
+        );
+  }
+}
 }
