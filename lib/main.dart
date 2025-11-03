@@ -7,15 +7,26 @@ import 'package:shared_preferences/shared_preferences.dart';
 // import 'package:multicast_dns/multicast_dns.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 var _logger = Logger();
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+    FlutterLocalNotificationsPlugin();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final prefs = await SharedPreferences.getInstance();
   final hasSeenGetStarted = prefs.getBool('hasSeenGetStarted') ?? false;
-  
+
+  // Initialize notification settings
+  const AndroidInitializationSettings androidInitSettings =
+      AndroidInitializationSettings('@mipmap/ic_launcher');
+  const InitializationSettings initSettings = InitializationSettings(
+    android: androidInitSettings,
+  );
+
+  await flutterLocalNotificationsPlugin.initialize(initSettings);
+
   runApp(SplashScreen(hasSeenGetStarted: hasSeenGetStarted));
 }
 
@@ -28,7 +39,9 @@ class SplashScreen extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Smart Bin',
-      home: hasSeenGetStarted ? const SmartBinDashboard() : const GetStartedPage(),
+      home: hasSeenGetStarted
+          ? const SmartBinDashboard()
+          : const GetStartedPage(),
     );
   }
 }
@@ -120,7 +133,7 @@ class GetStartedPage extends StatelessWidget {
                       // Save that user has seen the get started page
                       final prefs = await SharedPreferences.getInstance();
                       await prefs.setBool('hasSeenGetStarted', true);
-                      
+
                       if (!context.mounted) return;
                       Navigator.pushReplacement(
                         context,
@@ -276,9 +289,9 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
         timer.cancel();
         progressValue = 1.0;
         // 👉 You can show a Snackbar, Toast, or call setState() here
-      } else if(response.body == "incinerating"){
+      } else if (response.body == "incinerating") {
         progressValue = 0.75;
-      } else if(response.body == "heating"){
+      } else if (response.body == "heating") {
         progressValue = 0.25;
       } else {
         progressValue = 0.00;
@@ -421,7 +434,6 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
             ),
           ],
         ),
-     
       ),
     );
   }
@@ -816,7 +828,6 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
                         borderRadius: BorderRadius.circular(1),
                       ),
                     ],
-                    
                   ),
                 ),
 
@@ -1068,6 +1079,29 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
     }
 
     return responseStatus;
+  }
+
+  Future<void> showNotification(String title, String body) async {
+    const AndroidNotificationDetails androidPlatformChannelSpecifics =
+        AndroidNotificationDetails(
+          'timer_channel', // channel ID
+          'Timer Notifications', // channel name
+          channelDescription: 'Notification channel for timer updates',
+          importance: Importance.max,
+          priority: Priority.high,
+          showWhen: false,
+        );
+
+    const NotificationDetails platformChannelSpecifics = NotificationDetails(
+      android: androidPlatformChannelSpecifics,
+    );
+
+    await flutterLocalNotificationsPlugin.show(
+      0, // notification ID
+      title,
+      body,
+      platformChannelSpecifics,
+    );
   }
 
   Future<void> readSensorDetails() async {
