@@ -3,25 +3,60 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 // import 'package:multicast_dns/multicast_dns.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:permission_handler/permission_handler.dart';
+
 
 var _logger = Logger();
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+    FlutterLocalNotificationsPlugin();
 
-void main() {
-  // runApp(const SmartBinDashboard());
-  runApp(const SplashScreen());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final prefs = await SharedPreferences.getInstance();
+  final hasSeenGetStarted = prefs.getBool('hasSeenGetStarted') ?? false;
+
+  // Initialize notification settings
+  const AndroidInitializationSettings androidInitSettings =
+      AndroidInitializationSettings('@mipmap/ic_launcher');
+  const DarwinInitializationSettings iOSSettings = DarwinInitializationSettings(
+    requestAlertPermission: true,
+    requestBadgePermission: true,
+    requestSoundPermission: true,
+  );
+  const InitializationSettings initSettings = InitializationSettings(
+    android: androidInitSettings,
+    iOS: iOSSettings,
+  );
+
+  await flutterLocalNotificationsPlugin.initialize(
+    initSettings,
+    onDidReceiveNotificationResponse: (details) {
+      // Handle notification tap
+    },
+  );
+
+  runApp(SplashScreen(hasSeenGetStarted: hasSeenGetStarted));
 }
 
 class SplashScreen extends StatelessWidget {
-  const SplashScreen({super.key});
+  final bool hasSeenGetStarted;
+  const SplashScreen({super.key, required this.hasSeenGetStarted});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Smart Bin',
-      home: const GetStartedPage(), // 👈 start here first
+      home: hasSeenGetStarted
+          ? const SmartBinDashboard()
+          : const GetStartedPage(),
     );
   }
 }
@@ -109,7 +144,12 @@ class GetStartedPage extends StatelessWidget {
                       ),
                       minimumSize: const Size.fromHeight(70),
                     ),
-                    onPressed: () {
+                    onPressed: () async {
+                      // Save that user has seen the get started page
+                      final prefs = await SharedPreferences.getInstance();
+                      await prefs.setBool('hasSeenGetStarted', true);
+
+                      if (!context.mounted) return;
                       Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
@@ -146,6 +186,7 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
   int _selectedIndex = 0;
   double heatLevel = 0.75; // 75%
   double timerValue = 0; // 30 min
+  bool isTimerStarted = false;
   double tMin = 100;
   double tMax = 1200;
 
@@ -153,12 +194,132 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
   Timer? _timer;
   int _remainingSeconds = 0;
 
+  // Progress Bar
+  double progressValue = 0.0;
+
+  // Chamber Temperature
+  double temperature = 0.0;
+  int gas = 0;
+
+  // For checking
+  bool isRunning = false;
+  bool isRequestValid = false;
+
+  // Request timer
+  Timer? _requestTimer;
+
   static const primaryColor = Color(0xFF38E07B);
   static const backgroundColor = Color(0xFFF7F8FA);
   static const mutedColor = Color(0xFFE5E7EB);
   static const mutedForeground = Color(0xFF6B7280);
   static const cardColor = Colors.white;
   static const foregroundColor = Color(0xFF1A1A1A);
+
+  // Start sending request every 5 seconds
+  void startAutoRequest() {
+    // Cancel existing timer if running
+    _requestTimer?.cancel();
+
+    _requestTimer = Timer.periodic(const Duration(seconds: 5), (timer) async {
+      try {
+        final url = Uri.parse('http://esp8266-device.local/info');
+        final response = await http.post(
+          url,
+          headers: {'Content-Type': 'text/plain'},
+          // body: status, // e.g. 'ON' or 'OFF'
+        );
+
+        if (response.statusCode == 200) {
+          _logger.i('Info retrieved successfully: ${response.body}');
+          String body = response.body;
+          // _logger.d("${body.split(';')[0].split(':')[1]}");
+          setState(() {
+            temperature = double.parse(body.split(';')[0].split(':')[1]);
+            gas = int.parse(body.split(';')[1].split(':')[1]);
+            isRequestValid = true;
+            _logger.d(
+              "setState called: isRequestValid=$isRequestValid, temperature=$temperature",
+            );
+          });
+        } else {
+          _logger.w(
+            'Unexpected status: ${response.statusCode} - ${response.body}',
+          );
+
+          isRequestValid = false;
+        }
+
+        _logger.d("isRequestValid: $isRequestValid");
+      } catch (e, stacktrace) {
+        _logger.e('Error sending request to ESP8266: $e, $stacktrace');
+        setState(() {
+          isRequestValid = false;
+          _logger.d("setState called in error: isRequestValid=$isRequestValid");
+        });
+        // Fluttertoast.showToast(
+        //   msg: 'Error sending request to ESP8266: $e',
+        //   toastLength: Toast.LENGTH_SHORT, // Auto-hides after ~2 sec
+        //   gravity: ToastGravity.BOTTOM, // You can use CENTER or TOP
+        //   backgroundColor: Colors.black87,
+        //   textColor: Colors.white,
+        //   fontSize: 16.0,
+        // );
+      } finally {
+        _logger.i('Request to ESP8266 completed.');
+      }
+    });
+
+    // Timer
+    // if (_requestTimer != null && _requestTimer!.isActive) {
+    //   isRunning = true;
+    // } else {
+    //   isRunning = false;
+    // }
+  }
+
+  // Stop the auto request
+  void stopAutoRequest() {
+    _requestTimer?.cancel();
+    _requestTimer = null;
+    _logger.d("🛑 Auto request stopped");
+  }
+
+
+  @override
+  void initState() {
+    super.initState();
+    // animateProgressBar(); // start animation automatically
+    startAutoRequest();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    requestNotificationPermission();
+  }
+
+  // Status checker
+  void checkStatus() {
+    Timer.periodic(const Duration(seconds: 1), (timer) async {
+      final response = await http.get(
+        Uri.parse('http://esp8266-device.local/status'),
+      );
+
+      _logger.d("Check Status: ${response.body}");
+      if (response.body == "done") {
+        _logger.d("Timer completed!");
+        timer.cancel();
+        progressValue = 1.0;
+        // 👉 You can show a Snackbar, Toast, or call setState() here
+      } else if (response.body == "incinerating") {
+        progressValue = 0.75;
+      } else if (response.body == "heating") {
+        progressValue = 0.25;
+      } else {
+        progressValue = 0.00;
+      }
+    });
+  }
 
   // Timer
   void startTimer(int seconds) {
@@ -194,6 +355,46 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
     super.dispose();
   }
 
+  // Progress bar animation
+  // 🔹 Function to animate progress from 0 → 1 in 5 seconds
+  void animateProgressBar() async {
+    const duration = Duration(milliseconds: 50); // how often to update
+    const totalTime = Duration(seconds: 2); // total animation time
+    final steps = totalTime.inMilliseconds ~/ duration.inMilliseconds;
+
+    if (!isTimerStarted) {
+      for (int i = 0; i <= steps; i++) {
+        await Future.delayed(duration);
+        setState(() {
+          progressValue = i / steps;
+        });
+      }
+    } else {
+      progressValue = 0;
+    }
+  }
+
+  // Function to compute color based on progress
+  Color getProgressColor(double p) {
+    // From blue (cool) → red (hot)
+    // return Color.lerp(Colors.blue, Colors.red, progress)!;
+    const c1 = Color(0xFF44A1FF); // cool blue
+    const c2 = Color(0xFFFFB458); // orange
+    const c3 = Color(0xFFFF5339); // red-orange
+    const c4 = Color(0xFFFF0346); // deep red
+
+    if (p <= 0.33) {
+      // transition: blue → orange
+      return Color.lerp(c1, c2, p / 0.33)!;
+    } else if (p <= 0.66) {
+      // transition: orange → red-orange
+      return Color.lerp(c2, c3, (p - 0.33) / 0.33)!;
+    } else {
+      // transition: red-orange → deep red
+      return Color.lerp(c3, c4, (p - 0.66) / 0.34)!;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final pages = [_buildDashboard(), _buildStats(), _buildSettings()];
@@ -209,6 +410,7 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
             "Smart Hybrid Eco Incineration Bin",
             style: TextStyle(
               color: foregroundColor,
+              fontSize: 20,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -235,7 +437,7 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
         bottomNavigationBar: BottomNavigationBar(
           currentIndex: _selectedIndex,
           onTap: (index) => setState(() => _selectedIndex = index),
-          selectedItemColor: primaryColor,
+          selectedItemColor: const Color.fromARGB(255, 0, 0, 0),
           unselectedItemColor: mutedForeground,
           backgroundColor: cardColor,
           showUnselectedLabels: true,
@@ -306,7 +508,14 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
                   sliderValue: timerValue,
                   onChanged: (v) {
                     // setState(() => timerValue = v);
-                    setState(() => timerValue = v);
+                    setState(() {
+                      _logger.d("isTimerStarted: $isTimerStarted");
+
+                      if (!isTimerStarted) {
+                        timerValue = v;
+                        _logger.d("timerValue: $timerValue");
+                      }
+                    });
                   },
                   // valueText: "${(timerValue * 60).round()} min",
                   min: 0,
@@ -320,89 +529,76 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
           ),
         ),
 
-        const SizedBox(height: 14),
+        const SizedBox(height: 7),
 
+        // Chamber Temperature (full width)
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: Colors.black.withValues(alpha: 0.3),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 5,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(Icons.thermostat, size: 40, color: Colors.black),
-                          const SizedBox(width: 6),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                "Chamber Temperature",
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 15,
-                                ),
-                              ),
-                              Text(
-                                "25°C",
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 24,
-                                ),
-                              ),
-                            ],
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.black.withValues(alpha: 0.3)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 5,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.thermostat, size: 40, color: Colors.black),
+                    const SizedBox(width: 6),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Chamber Temperature",
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 15,
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Center(
-                        child: Column(
-                          children: [
-                            // Text(
-                            //   "Test",
-                            //   style: const TextStyle(
-                            //     fontWeight: FontWeight.w700,
-                            //     fontSize: 16,
-                            //   ),
-                            // ),
-                            LinearProgressIndicator(
-                              value: 0.40,
-                              minHeight: 10,
-                              backgroundColor: Colors.grey[300],
-                              valueColor: AlwaysStoppedAnimation(Colors.red),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ],
                         ),
+                        Text(
+                          isRequestValid ? "$temperature°C" : "OFFLINE",
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 24,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Center(
+                  child: Column(
+                    children: [
+                      LinearProgressIndicator(
+                        // value: 0.40,
+                        value: temperature.toDouble(),
+                        // value: progressValue,
+                        minHeight: 10,
+                        backgroundColor: Colors.grey[300],
+                        valueColor: AlwaysStoppedAnimation(Colors.red),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                     ],
                   ),
                 ),
-              ),
-              const SizedBox(width: 16),
-            ],
+              ],
+            ),
           ),
         ),
 
-        const SizedBox(height: 14),
+        const SizedBox(height: 7),
 
         // Smoke and Timer
         Padding(
@@ -432,10 +628,20 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
                     children: [
                       Row(
                         children: [
-                          Icon(
-                            Icons.ac_unit_outlined,
-                            size: 20,
-                            color: Colors.black,
+                          // Icon(
+                          //   // Icons.ac_unit_outlined,
+                          //   Icons.ac_unit_outlined,
+                          //   size: 20,
+                          //   color: Colors.black,
+                          // ),
+                          SvgPicture.asset(
+                            'assets/images/air-filter.svg',
+                            width: 20,
+                            height: 20,
+                            colorFilter: const ColorFilter.mode(
+                              Colors.black,
+                              BlendMode.srcIn,
+                            ),
                           ),
                           const SizedBox(width: 6),
                           Text(
@@ -576,6 +782,107 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
           ),
         ),
 
+        // Process Progress (full width)
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.black.withValues(alpha: 0.3)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 5,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.info, size: 20, color: Colors.black),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Process Progress",
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 15,
+                            ),
+                          ),
+                          Text(
+                            '${(progressValue * 100).round()}%',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 15,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+
+                // Progress Bar
+                const SizedBox(height: 16),
+
+                // Process Color bar
+                Center(
+                  child: Column(
+                    children: [
+                      LinearProgressIndicator(
+                        // value: 0.25,
+                        value: progressValue,
+                        minHeight: 10,
+                        backgroundColor: Colors.grey[300],
+                        // valueColor: AlwaysStoppedAnimation(Colors.red),
+                        // valueColor: getProgressColor(progressValue),
+                        color: getProgressColor(progressValue),
+                        borderRadius: BorderRadius.circular(1),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 4),
+
+                // Process Info Texts
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: const [
+                    Text(
+                      "Idle",
+                      style: TextStyle(fontSize: 12, color: Colors.black54),
+                    ),
+                    Text(
+                      "Heating",
+                      style: TextStyle(fontSize: 12, color: Colors.black54),
+                    ),
+                    Text(
+                      "Incinerating",
+                      style: TextStyle(fontSize: 12, color: Colors.black54),
+                    ),
+                    Text(
+                      "Complete",
+                      style: TextStyle(fontSize: 12, color: Colors.black54),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        // Start and Stop
         const Spacer(),
 
         Padding(
@@ -585,24 +892,62 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
               Expanded(
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: mutedColor,
-                    foregroundColor: foregroundColor,
+                    backgroundColor: const Color.fromARGB(255, 0, 0, 0),
+                    foregroundColor: Colors.black,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(1),
                     ),
                     minimumSize: const Size.fromHeight(56),
                   ),
-                  onPressed: () async {
-                    bool start = await setLedLight("OFF");
+                  onPressed: timerValue != 0
+                      ? () async {
+                          Fluttertoast.showToast(
+                            msg: "Starting",
+                            toastLength:
+                                Toast.LENGTH_SHORT, // Auto-hides after ~2 sec
+                            gravity: ToastGravity
+                                .BOTTOM, // You can use CENTER or TOP
+                            backgroundColor: Colors.black87,
+                            textColor: Colors.white,
+                            fontSize: 14.0,
+                          );
 
-                    _logger.i("Start Status: $start");
-                    if (start) {
-                      startTimer(0);
-                    }
-                  },
-                  child: const Text(
-                    "Stop",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          bool start = await sendCommand(
+                            "timer:${timerValue.toInt() * 60}",
+                            // "timer:${12}",
+                          );
+                          // animateProgressBar();
+
+                          _logger.i("Start Status: $start");
+                          if (start) {
+                            isTimerStarted = true;
+                            startTimer(timerValue.toInt() * 60);
+                            showNotification("Smart Hybrid Eco Bin", "Device has started");
+
+                            _logger.i("Start Status: ${timerValue.toInt()}");
+
+                            // Check status occassionaly
+                            checkStatus();
+                            // startTimer(timerValue.toInt() * 60);
+                          } else {
+                            isTimerStarted = false;
+                          }
+                        }
+                      : null,
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min, // keeps button compact
+                    children: [
+                      Icon(Icons.play_arrow, color: Colors.white, size: 24),
+                      SizedBox(width: 8), // spacing between icon and text
+                      Text(
+                        "Start",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -610,27 +955,55 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
               Expanded(
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: primaryColor,
-                    foregroundColor: Colors.black,
+                    backgroundColor: mutedColor,
+                    foregroundColor: foregroundColor,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(1),
                     ),
                     minimumSize: const Size.fromHeight(56),
                   ),
-                  onPressed: () async {
-                    bool start = await setLedLight("ON");
+                  onPressed: timerValue != 0
+                      ? () async {
+                          Fluttertoast.showToast(
+                            msg: "Stopping, please wait...",
+                            toastLength:
+                                Toast.LENGTH_SHORT, // Auto-hides after ~2 sec
+                            gravity: ToastGravity
+                                .BOTTOM, // You can use CENTER or TOP
+                            backgroundColor: Colors.black87,
+                            textColor: Colors.white,
+                            fontSize: 14.0,
+                          );
 
-                    _logger.i("Start Status: $start");
-                    if (start) {
-                      // startTimer(timerValue.toInt() * 60);
-                      // _logger.i("Start Status: ${timerValue.toInt()}");
-                      startTimer((timerValue == 0 ? 1 : timerValue).toInt() * 60);
-                      // startTimer(timerValue.toInt() * 60);
-                    }
-                  },
-                  child: const Text(
-                    "Start",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          bool start = await sendCommand("timer:0");
+
+                          _logger.i("Start Status: $start");
+                          if (start) {
+                            startTimer(0);
+                          }
+
+                          hideNotification();
+                          isTimerStarted = false;
+                        }
+                      : null,
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min, // keeps button compact
+                    children: [
+                      Icon(
+                        Icons.stop_outlined,
+                        color: Color.fromARGB(255, 94, 94, 94),
+                        size: 24,
+                      ),
+                      SizedBox(width: 8), // spacing between icon and text
+                      Text(
+                        "Stop",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Color.fromARGB(255, 94, 94, 94),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -673,25 +1046,9 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
     );
   }
 
-  // Helper for round icons
-  static Widget _circleIcon(
-    IconData icon,
-    Color iconColor,
-    Color bg,
-    Color borderColor,
-  ) {
-    return Container(
-      margin: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: bg,
-        shape: BoxShape.circle,
-        border: Border.all(color: borderColor),
-      ),
-      child: Icon(icon, color: iconColor),
-    );
-  }
+  // Helper for round icons (removed unused helper to satisfy analyzer)
 
-  Future<bool> setLedLight(status) async {
+  Future<bool> sendCommand(status) async {
     bool responseStatus = false;
 
     try {
@@ -703,16 +1060,18 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
       );
 
       if (response.statusCode == 200) {
-        _logger.i('LED updated successfully: ${response.body}');
+        if (status == "ON" || status == "OFF") {
+          _logger.i('LED updated successfully: ${response.body}');
 
-        Fluttertoast.showToast(
-          msg: "${status == "ON" ? "Starting" : "Stopping"} Incinerator",
-          toastLength: Toast.LENGTH_SHORT, // Auto-hides after ~2 sec
-          gravity: ToastGravity.BOTTOM, // You can use CENTER or TOP
-          backgroundColor: Colors.black87,
-          textColor: Colors.white,
-          fontSize: 16.0,
-        );
+          Fluttertoast.showToast(
+            msg: "${status == "ON" ? "Started" : "Stopped"} Incinerator",
+            toastLength: Toast.LENGTH_SHORT, // Auto-hides after ~2 sec
+            gravity: ToastGravity.BOTTOM, // You can use CENTER or TOP
+            backgroundColor: Colors.black87,
+            textColor: Colors.white,
+            fontSize: 16.0,
+          );
+        }
 
         responseStatus = true;
       } else {
@@ -720,7 +1079,7 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
           'Unexpected status: ${response.statusCode} - ${response.body}',
         );
 
-         Fluttertoast.showToast(
+        Fluttertoast.showToast(
           msg: 'Unexpected status: ${response.statusCode}',
           toastLength: Toast.LENGTH_SHORT, // Auto-hides after ~2 sec
           gravity: ToastGravity.BOTTOM, // You can use CENTER or TOP
@@ -745,6 +1104,74 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
     }
 
     return responseStatus;
+  }
+
+  Future<void> showNotification(String title, String body) async {
+    const AndroidNotificationDetails androidPlatformChannelSpecifics =
+        AndroidNotificationDetails(
+          'timer_channel', // channel ID
+          'Timer Notifications', // channel name
+          channelDescription: 'Notification channel for timer updates',
+          importance: Importance.max,
+          priority: Priority.high,
+          showWhen: false,
+        );
+
+    const NotificationDetails platformChannelSpecifics = NotificationDetails(
+      android: androidPlatformChannelSpecifics,
+    );
+
+    await flutterLocalNotificationsPlugin.show(
+      0, // notification ID
+      title,
+      body,
+      platformChannelSpecifics,
+    );
+  }
+
+  Future<void> hideNotification() async {
+    await flutterLocalNotificationsPlugin.cancel(0);
+  }
+
+  Future<void> readSensorDetails() async {
+    try {
+      final url = Uri.parse('http://esp8266-device.local/info');
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'text/plain'},
+        // body: status, // e.g. 'ON' or 'OFF'
+      );
+
+      if (response.statusCode == 200) {
+        _logger.i('Info retrieved successfully: ${response.body}');
+      } else {
+        _logger.w(
+          'Unexpected status: ${response.statusCode} - ${response.body}',
+        );
+
+        Fluttertoast.showToast(
+          msg: 'Unexpected status: ${response.statusCode}',
+          toastLength: Toast.LENGTH_SHORT, // Auto-hides after ~2 sec
+          gravity: ToastGravity.BOTTOM, // You can use CENTER or TOP
+          backgroundColor: Colors.black87,
+          textColor: Colors.white,
+          fontSize: 16.0,
+        );
+      }
+    } catch (e, stacktrace) {
+      _logger.e('Error sending request to ESP8266: $e, $stacktrace');
+
+      Fluttertoast.showToast(
+        msg: 'Error sending request to ESP8266: $e',
+        toastLength: Toast.LENGTH_SHORT, // Auto-hides after ~2 sec
+        gravity: ToastGravity.BOTTOM, // You can use CENTER or TOP
+        backgroundColor: Colors.black87,
+        textColor: Colors.white,
+        fontSize: 16.0,
+      );
+    } finally {
+      _logger.i('Request to ESP8266 completed.');
+    }
   }
 
   Widget _controlCard({
@@ -827,4 +1254,28 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
       ),
     );
   }
+
+  Future<void> requestNotificationPermission() async {
+  // Android 13+ (API 33+) requires runtime permission
+  if (Theme.of(context).platform == TargetPlatform.android) {
+    final deviceInfo = DeviceInfoPlugin();
+    final androidInfo = await deviceInfo.androidInfo;
+    if (androidInfo.version.sdkInt >= 33) {
+      final permission = await Permission.notification.request();
+      if (!permission.isGranted) {
+        // Optionally show a dialog to the user
+      }
+    }
+  }
+  // iOS
+  if (Theme.of(context).platform == TargetPlatform.iOS) {
+    await flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>()
+        ?.requestPermissions(
+          alert: true,
+          badge: true,
+          sound: true,
+        );
+  }
+}
 }
