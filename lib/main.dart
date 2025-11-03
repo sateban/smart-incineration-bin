@@ -3,26 +3,32 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 // import 'package:multicast_dns/multicast_dns.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 var _logger = Logger();
 
-void main() {
-  // runApp(const SmartBinDashboard());
-  runApp(const SplashScreen());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final prefs = await SharedPreferences.getInstance();
+  final hasSeenGetStarted = prefs.getBool('hasSeenGetStarted') ?? false;
+  
+  runApp(SplashScreen(hasSeenGetStarted: hasSeenGetStarted));
 }
 
 class SplashScreen extends StatelessWidget {
-  const SplashScreen({super.key});
+  final bool hasSeenGetStarted;
+  const SplashScreen({super.key, required this.hasSeenGetStarted});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Smart Bin',
-      home: const GetStartedPage(), // 👈 start here first
+      home: hasSeenGetStarted ? const SmartBinDashboard() : const GetStartedPage(),
     );
   }
 }
@@ -110,7 +116,12 @@ class GetStartedPage extends StatelessWidget {
                       ),
                       minimumSize: const Size.fromHeight(70),
                     ),
-                    onPressed: () {
+                    onPressed: () async {
+                      // Save that user has seen the get started page
+                      final prefs = await SharedPreferences.getInstance();
+                      await prefs.setBool('hasSeenGetStarted', true);
+                      
+                      if (!context.mounted) return;
                       Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
