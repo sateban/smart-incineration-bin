@@ -39,6 +39,7 @@ dependencies:
   logger: ^2.6.2
   fluttertoast: ^9.0.0
   flutter_svg: ^2.2.1
+  shared_preferences: ^2.5.3
 
 dev_dependencies:
   flutter_test:
