@@ -189,6 +189,7 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
   bool isTimerStarted = false;
   double tMin = 100;
   double tMax = 1200;
+  bool _useFirebase = true; // default option
 
   // For Timer
   Timer? _timer;
@@ -207,6 +208,9 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
 
   // Request timer
   Timer? _requestTimer;
+
+  // Smoke Purification
+  String smokeValue = "";
 
   static const primaryColor = Color(0xFF38E07B);
   static const backgroundColor = Color(0xFFF7F8FA);
@@ -397,7 +401,7 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
 
   @override
   Widget build(BuildContext context) {
-    final pages = [_buildDashboard(), _buildStats(), _buildSettings()];
+    final pages = [_buildDashboard(), _buildSettings()];
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
@@ -474,7 +478,70 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
             // fontWeight: FontWeight.bold,
           ),
         ),
-        const SizedBox(height: 24),
+
+        // Status
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              Expanded(
+                child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.black.withValues(alpha: 0.3)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 5,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.info_outline, size: 20, color: Colors.black),
+                        const SizedBox(width: 6),
+                        Text(
+                          "Status: Process Complete",
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 15,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Center(
+                      child: Column(
+                        children: [
+                          Text(
+                            "Safe to open when temperature is below 50°",
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 14,
+                              color: Color.fromARGB(255, 92, 92, 92)
+                            ),
+                          ),
+                          // Text(
+                          //   "subText",
+                          //   style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                          // ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              ),
+            ],
+          ),
+        ),
 
         // Heat Level and Timer
         Padding(
@@ -881,7 +948,7 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
             ),
           ),
         ),
-
+        
         // Start and Stop
         const Spacer(),
 
@@ -1034,14 +1101,43 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
   // ⚙️ PAGE 3: Settings
   // -------------------
   Widget _buildSettings() {
-    return const Center(
-      child: Text(
-        "Settings Page",
-        style: TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-          color: foregroundColor,
-        ),
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // const Text(
+          //   "Settings Page",
+          //   style: TextStyle(
+          //     fontSize: 20,
+          //     fontWeight: FontWeight.bold,
+          //     color: foregroundColor,
+          //   ),
+          // ),
+          const SizedBox(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text("Local Wi-Fi",
+                  style: TextStyle(fontSize: 16, color: foregroundColor)),
+              Switch(
+                value: _useFirebase,
+                activeColor: Colors.blue,
+                onChanged: (value) {
+                  setState(() {
+                    _useFirebase = value;
+                  });
+                },
+              ),
+              const Text("Firebase",
+                  style: TextStyle(fontSize: 16, color: foregroundColor)),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            "Current connection: ${_useFirebase ? "Firebase Connection" : "Local Wi-Fi"}",
+            style: const TextStyle(fontSize: 16, color: foregroundColor),
+          ),
+        ],
       ),
     );
   }
