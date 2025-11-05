@@ -9,52 +9,22 @@
 					"label": ""
 				},
 				{
-					"line": 477,
-					"column": 33,
-					"label": "Setting Timer"
+					"line": 212,
+					"column": 9,
+					"label": "Variable for Chamber Temperature"
 				},
 				{
-					"line": 491,
-					"column": 37,
-					"label": ""
+					"line": 1101,
+					"column": 16,
+					"label": "Settings"
 				},
 				{
-					"line": 785,
-					"column": 41,
-					"label": ""
-				},
-				{
-					"line": 807,
-					"column": 49,
-					"label": ""
-				},
-				{
-					"line": 908,
-					"column": 31,
-					"label": ""
-				},
-				{
-					"line": 916,
-					"column": 20,
-					"label": ""
-				},
-				{
-					"line": 964,
-					"column": 31,
-					"label": ""
-				},
-				{
-					"line": 968,
-					"column": 31,
-					"label": ""
-				},
-				{
-					"line": 1065,
+					"line": 1160,
 					"column": 6,
 					"label": ""
 				},
 				{
-					"line": 1089,
+					"line": 1184,
 					"column": 24,
 					"label": "Notification"
 				}
