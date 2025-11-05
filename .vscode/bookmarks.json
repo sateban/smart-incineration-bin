@@ -14,17 +14,17 @@
 					"label": "Variable for Chamber Temperature"
 				},
 				{
-					"line": 1101,
+					"line": 935,
 					"column": 16,
 					"label": "Settings"
 				},
 				{
-					"line": 1160,
+					"line": 994,
 					"column": 6,
 					"label": ""
 				},
 				{
-					"line": 1184,
+					"line": 1018,
 					"column": 24,
 					"label": "Notification"
 				}
