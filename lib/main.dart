@@ -12,7 +12,6 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-
 var _logger = Logger();
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
@@ -288,7 +287,6 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
     _logger.d("🛑 Auto request stopped");
   }
 
-
   @override
   void initState() {
     super.initState();
@@ -468,301 +466,143 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
   // 🏠 PAGE 1: Dashboard
   // -------------------
   Widget _buildDashboard() {
-    return Column(
+    return Stack(
       children: [
-        Text(
-          "Monitor and control operations",
-          style: TextStyle(
-            fontSize: 16,
-            // color: primaryColor,
-            // fontWeight: FontWeight.bold,
-          ),
-        ),
-
-        // Status
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        // ===== Scrollable Section =====
+        SingleChildScrollView(
+          padding: const EdgeInsets.only(
+            bottom: 120,
+          ), // Space for fixed buttons
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.black.withValues(alpha: 0.3)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 5,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
+              const SizedBox(height: 16),
+
+              // Header
+              const Center(
+                child: Text(
+                  "Monitor and control operations",
+                  style: TextStyle(fontSize: 16),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              ),
+
+              // ==== Status ====
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    Row(
-                      children: [
-                        Icon(Icons.info_outline, size: 20, color: Colors.black),
-                        const SizedBox(width: 6),
-                        Text(
-                          "Status: Process Complete",
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 15,
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                            color: Colors.black.withValues(alpha: 0.3),
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Center(
-                      child: Column(
-                        children: [
-                          Text(
-                            "Safe to open when temperature is below 50°",
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 14,
-                              color: Color.fromARGB(255, 92, 92, 92)
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.05),
+                              blurRadius: 5,
+                              offset: const Offset(0, 3),
                             ),
-                          ),
-                          // Text(
-                          //   "subText",
-                          //   style: TextStyle(color: Colors.grey[600], fontSize: 13),
-                          // ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              ),
-            ],
-          ),
-        ),
-
-        // Heat Level and Timer
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              Expanded(
-                child: _controlCard(
-                  icon: Icons.local_fire_department_outlined,
-                  title: "Heat Level",
-                  sliderValue: heatLevel,
-                  onChanged: (v) {
-                    setState(() => heatLevel = v);
-                  },
-                  // valueText: "${(heatLevel * 100).round()}%",
-                  // subText: "${(heatLevel * 1200).round()}°C",
-                  min: 0,
-                  max: 100,
-                  divisions: 100,
-                  valueText: "${(heatLevel).round()}%",
-                  subText:
-                      "${(tMin + ((heatLevel - 1) / (100 - 1)) * (tMax - tMin)).round()}°C",
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _controlCard(
-                  icon: Icons.timer_outlined,
-                  title: "Timer",
-                  sliderValue: timerValue,
-                  onChanged: (v) {
-                    // setState(() => timerValue = v);
-                    setState(() {
-                      _logger.d("isTimerStarted: $isTimerStarted");
-
-                      if (!isTimerStarted) {
-                        timerValue = v;
-                        _logger.d("timerValue: $timerValue");
-                      }
-                    });
-                  },
-                  // valueText: "${(timerValue * 60).round()} min",
-                  min: 0,
-                  max: 60,
-                  divisions: 12,
-                  valueText: "${(timerValue).round()} min",
-                  subText: "Duration",
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        const SizedBox(height: 7),
-
-        // Chamber Temperature (full width)
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.black.withValues(alpha: 0.3)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  blurRadius: 5,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.thermostat, size: 40, color: Colors.black),
-                    const SizedBox(width: 6),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          "Chamber Temperature",
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 15,
-                          ),
+                          ],
                         ),
-                        Text(
-                          isRequestValid ? "$temperature°C" : "OFFLINE",
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 24,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Center(
-                  child: Column(
-                    children: [
-                      LinearProgressIndicator(
-                        // value: 0.40,
-                        value: temperature.toDouble(),
-                        // value: progressValue,
-                        minHeight: 10,
-                        backgroundColor: Colors.grey[300],
-                        valueColor: AlwaysStoppedAnimation(Colors.red),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-
-        const SizedBox(height: 7),
-
-        // Smoke and Timer
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: Colors.black.withValues(alpha: 0.3),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 5,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          // Icon(
-                          //   // Icons.ac_unit_outlined,
-                          //   Icons.ac_unit_outlined,
-                          //   size: 20,
-                          //   color: Colors.black,
-                          // ),
-                          SvgPicture.asset(
-                            'assets/images/air-filter.svg',
-                            width: 20,
-                            height: 20,
-                            colorFilter: const ColorFilter.mode(
-                              Colors.black,
-                              BlendMode.srcIn,
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            "Smoke\nPurification",
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 15,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      // SliderTheme(
-                      //   data: SliderThemeData(
-                      //     trackHeight: 10,
-                      //     thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
-                      //     overlayShape: SliderComponentShape.noOverlay,
-                      //   ),
-                      //   child: Slider(
-                      //     min: min,
-                      //     max: max,
-                      //     divisions: divisions,
-                      //     value: sliderValue,
-                      //     onChanged: onChanged,
-                      //     activeColor: Colors.black,
-                      //     inactiveColor: Colors.grey[300],
-                      //   ),
-                      // ),
-                      const SizedBox(height: 4),
-                      Center(
                         child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              "INACTIVE",
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 16,
+                            Row(
+                              children: const [
+                                Icon(
+                                  Icons.info_outline,
+                                  size: 20,
+                                  color: Colors.black,
+                                ),
+                                SizedBox(width: 6),
+                                Text(
+                                  "Status: Process Complete",
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 15,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            const Center(
+                              child: Text(
+                                "Safe to open when temperature is below 50°",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 14,
+                                  color: Color.fromARGB(255, 92, 92, 92),
+                                ),
                               ),
                             ),
-                            // Text(
-                            //   "System Standby",
-                            //   style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                            // ),
                           ],
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(width: 16),
 
-              Expanded(
+              // ==== Heat Level & Timer ====
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Expanded(
+                      child: _controlCard(
+                        icon: Icons.local_fire_department_outlined,
+                        title: "Heat Level",
+                        sliderValue: heatLevel,
+                        onChanged: (v) {
+                          setState(() => heatLevel = v);
+                        },
+                        min: 0,
+                        max: 100,
+                        divisions: 100,
+                        valueText: "${(heatLevel).round()}%",
+                        subText:
+                            "${(tMin + ((heatLevel - 1) / (100 - 1)) * (tMax - tMin)).round()}°C",
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _controlCard(
+                        icon: Icons.timer_outlined,
+                        title: "Timer",
+                        sliderValue: timerValue,
+                        onChanged: (v) {
+                          setState(() {
+                            _logger.d("isTimerStarted: $isTimerStarted");
+                            if (!isTimerStarted) {
+                              timerValue = v;
+                              _logger.d("timerValue: $timerValue");
+                            }
+                          });
+                        },
+                        min: 0,
+                        max: 60,
+                        divisions: 12,
+                        valueText: "${(timerValue).round()} min",
+                        subText: "Duration",
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 7),
+
+              // ==== Chamber Temperature ====
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Container(
+                  width: double.infinity,
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -783,298 +623,396 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
                     children: [
                       Row(
                         children: [
-                          Icon(
-                            Icons.timer_outlined,
-                            size: 20,
+                          const Icon(
+                            Icons.thermostat,
+                            size: 40,
                             color: Colors.black,
                           ),
                           const SizedBox(width: 6),
-                          Text(
-                            "Timer",
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 15,
-                            ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                "Chamber Temperature",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 15,
+                                ),
+                              ),
+                              Text(
+                                isRequestValid ? "$temperature°C" : "OFFLINE",
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 24,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
                       const SizedBox(height: 12),
-                      // SliderTheme(
-                      //   data: SliderThemeData(
-                      //     trackHeight: 10,
-                      //     thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
-                      //     overlayShape: SliderComponentShape.noOverlay,
-                      //   ),
-                      //   child: Slider(
-                      //     min: min,
-                      //     max: max,
-                      //     divisions: divisions,
-                      //     value: sliderValue,
-                      //     onChanged: onChanged,
-                      //     activeColor: Colors.black,
-                      //     inactiveColor: Colors.grey[300],
-                      //   ),
-                      // ),
-                      const SizedBox(height: 4),
                       Center(
-                        child: Column(
-                          children: [
-                            Text(
-                              "Time Remaining",
-                              style: const TextStyle(
-                                // fontWeight: FontWeight.w700,
-                                fontSize: 16,
-                              ),
-                            ),
-                            Text(
-                              // "00:00:00",
-                              formatTime(_remainingSeconds),
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 20,
-                              ),
-                            ),
-                            // Text(
-                            //   "System Standby",
-                            //   style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                            // ),
-                          ],
+                        child: LinearProgressIndicator(
+                          value: temperature.toDouble(),
+                          minHeight: 10,
+                          backgroundColor: Colors.grey[300],
+                          valueColor: const AlwaysStoppedAnimation(Colors.red),
+                          borderRadius: BorderRadius.circular(10),
                         ),
                       ),
                     ],
                   ),
                 ),
               ),
-            ],
-          ),
-        ),
 
-        // Process Progress (full width)
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.black.withValues(alpha: 0.3)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  blurRadius: 5,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+              const SizedBox(height: 7),
+
+              // ==== Smoke and Timer ====
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    const Icon(Icons.info, size: 20, color: Colors.black),
-                    const SizedBox(width: 6),
+                    // Smoke Card
                     Expanded(
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "Process Progress",
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 15,
-                            ),
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.black.withValues(alpha: 0.3),
                           ),
-                          Text(
-                            '${(progressValue * 100).round()}%',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 15,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.05),
+                              blurRadius: 5,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                SvgPicture.asset(
+                                  'assets/images/air-filter.svg',
+                                  width: 20,
+                                  height: 20,
+                                  colorFilter: const ColorFilter.mode(
+                                    Colors.black,
+                                    BlendMode.srcIn,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                const Text(
+                                  "Smoke\nPurification",
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 15,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            const Center(
+                              child: Text(
+                                "INACTIVE",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(width: 16),
+
+                    // Timer Card
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.black.withValues(alpha: 0.3),
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.05),
+                              blurRadius: 5,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: const [
+                                Icon(
+                                  Icons.timer_outlined,
+                                  size: 20,
+                                  color: Colors.black,
+                                ),
+                                SizedBox(width: 6),
+                                Text(
+                                  "Timer",
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 15,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            Center(
+                              child: Column(
+                                children: [
+                                  const Text(
+                                    "Time Remaining",
+                                    style: TextStyle(fontSize: 16),
+                                  ),
+                                  Text(
+                                    formatTime(_remainingSeconds),
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 20,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // ==== Process Progress ====
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Colors.black.withValues(alpha: 0.3),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 5,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.info, size: 20, color: Colors.black),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text(
+                                  "Process Progress",
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 15,
+                                  ),
+                                ),
+                                Text(
+                                  '${(progressValue * 100).round()}%',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 15,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
                       ),
-                    ),
-                  ],
-                ),
-
-                // Progress Bar
-                const SizedBox(height: 16),
-
-                // Process Color bar
-                Center(
-                  child: Column(
-                    children: [
+                      const SizedBox(height: 16),
                       LinearProgressIndicator(
-                        // value: 0.25,
                         value: progressValue,
                         minHeight: 10,
                         backgroundColor: Colors.grey[300],
-                        // valueColor: AlwaysStoppedAnimation(Colors.red),
-                        // valueColor: getProgressColor(progressValue),
                         color: getProgressColor(progressValue),
                         borderRadius: BorderRadius.circular(1),
                       ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 4),
-
-                // Process Info Texts
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: const [
-                    Text(
-                      "Idle",
-                      style: TextStyle(fontSize: 12, color: Colors.black54),
-                    ),
-                    Text(
-                      "Heating",
-                      style: TextStyle(fontSize: 12, color: Colors.black54),
-                    ),
-                    Text(
-                      "Incinerating",
-                      style: TextStyle(fontSize: 12, color: Colors.black54),
-                    ),
-                    Text(
-                      "Complete",
-                      style: TextStyle(fontSize: 12, color: Colors.black54),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-        
-        // Start and Stop
-        const Spacer(),
-
-        Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Expanded(
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color.fromARGB(255, 0, 0, 0),
-                    foregroundColor: Colors.black,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(1),
-                    ),
-                    minimumSize: const Size.fromHeight(56),
-                  ),
-                  onPressed: timerValue != 0
-                      ? () async {
-                          Fluttertoast.showToast(
-                            msg: "Starting",
-                            toastLength:
-                                Toast.LENGTH_SHORT, // Auto-hides after ~2 sec
-                            gravity: ToastGravity
-                                .BOTTOM, // You can use CENTER or TOP
-                            backgroundColor: Colors.black87,
-                            textColor: Colors.white,
-                            fontSize: 14.0,
-                          );
-
-                          bool start = await sendCommand(
-                            "timer:${timerValue.toInt() * 60}",
-                            // "timer:${12}",
-                          );
-                          // animateProgressBar();
-
-                          _logger.i("Start Status: $start");
-                          if (start) {
-                            isTimerStarted = true;
-                            startTimer(timerValue.toInt() * 60);
-                            showNotification("Smart Hybrid Eco Bin", "Device has started");
-
-                            _logger.i("Start Status: ${timerValue.toInt()}");
-
-                            // Check status occassionaly
-                            checkStatus();
-                            // startTimer(timerValue.toInt() * 60);
-                          } else {
-                            isTimerStarted = false;
-                          }
-                        }
-                      : null,
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min, // keeps button compact
-                    children: [
-                      Icon(Icons.play_arrow, color: Colors.white, size: 24),
-                      SizedBox(width: 8), // spacing between icon and text
-                      Text(
-                        "Start",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: mutedColor,
-                    foregroundColor: foregroundColor,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(1),
-                    ),
-                    minimumSize: const Size.fromHeight(56),
-                  ),
-                  onPressed: timerValue != 0
-                      ? () async {
-                          Fluttertoast.showToast(
-                            msg: "Stopping, please wait...",
-                            toastLength:
-                                Toast.LENGTH_SHORT, // Auto-hides after ~2 sec
-                            gravity: ToastGravity
-                                .BOTTOM, // You can use CENTER or TOP
-                            backgroundColor: Colors.black87,
-                            textColor: Colors.white,
-                            fontSize: 14.0,
-                          );
-
-                          bool start = await sendCommand("timer:0");
-
-                          _logger.i("Start Status: $start");
-                          if (start) {
-                            startTimer(0);
-                          }
-
-                          hideNotification();
-                          isTimerStarted = false;
-                        }
-                      : null,
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min, // keeps button compact
-                    children: [
-                      Icon(
-                        Icons.stop_outlined,
-                        color: Color.fromARGB(255, 94, 94, 94),
-                        size: 24,
-                      ),
-                      SizedBox(width: 8), // spacing between icon and text
-                      Text(
-                        "Stop",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Color.fromARGB(255, 94, 94, 94),
-                        ),
+                      const SizedBox(height: 4),
+                      const Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            "Idle",
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.black54,
+                            ),
+                          ),
+                          Text(
+                            "Heating",
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.black54,
+                            ),
+                          ),
+                          Text(
+                            "Incinerating",
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.black54,
+                            ),
+                          ),
+                          Text(
+                            "Complete",
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.black54,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
                 ),
               ),
             ],
+          ),
+        ),
+
+        // ===== Fixed Bottom Buttons =====
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0,
+          child: Container(
+            color: Colors.white, // Background for contrast
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.black,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(1),
+                      ),
+                      minimumSize: const Size.fromHeight(56),
+                    ),
+                    onPressed: timerValue != 0
+                        ? () async {
+                            Fluttertoast.showToast(
+                              msg: "Starting",
+                              toastLength: Toast.LENGTH_SHORT,
+                              gravity: ToastGravity.BOTTOM,
+                              backgroundColor: Colors.black87,
+                              textColor: Colors.white,
+                              fontSize: 14.0,
+                            );
+
+                            bool start = await sendCommand(
+                              "timer:${timerValue.toInt() * 60}",
+                            );
+                            _logger.i("Start Status: $start");
+                            if (start) {
+                              isTimerStarted = true;
+                              startTimer(timerValue.toInt() * 60);
+                              showNotification(
+                                "Smart Hybrid Eco Bin",
+                                "Device has started",
+                              );
+                              checkStatus();
+                            } else {
+                              isTimerStarted = false;
+                            }
+                          }
+                        : null,
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.play_arrow, color: Colors.white, size: 24),
+                        SizedBox(width: 8),
+                        Text(
+                          "Start",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: mutedColor,
+                      foregroundColor: foregroundColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(1),
+                      ),
+                      minimumSize: const Size.fromHeight(56),
+                    ),
+                    onPressed: timerValue != 0
+                        ? () async {
+                            Fluttertoast.showToast(
+                              msg: "Stopping, please wait...",
+                              toastLength: Toast.LENGTH_SHORT,
+                              gravity: ToastGravity.BOTTOM,
+                              backgroundColor: Colors.black87,
+                              textColor: Colors.white,
+                              fontSize: 14.0,
+                            );
+
+                            bool start = await sendCommand("timer:0");
+                            _logger.i("Start Status: $start");
+                            if (start) startTimer(0);
+
+                            hideNotification();
+                            isTimerStarted = false;
+                          }
+                        : null,
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.stop_outlined,
+                          color: Color.fromARGB(255, 94, 94, 94),
+                          size: 24,
+                        ),
+                        SizedBox(width: 8),
+                        Text(
+                          "Stop",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Color.fromARGB(255, 94, 94, 94),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ],
@@ -1117,8 +1055,10 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text("Local Wi-Fi",
-                  style: TextStyle(fontSize: 16, color: foregroundColor)),
+              const Text(
+                "Local Wi-Fi",
+                style: TextStyle(fontSize: 16, color: foregroundColor),
+              ),
               Switch(
                 value: _useFirebase,
                 activeColor: Colors.blue,
@@ -1128,8 +1068,10 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
                   });
                 },
               ),
-              const Text("Firebase",
-                  style: TextStyle(fontSize: 16, color: foregroundColor)),
+              const Text(
+                "Firebase",
+                style: TextStyle(fontSize: 16, color: foregroundColor),
+              ),
             ],
           ),
           const SizedBox(height: 10),
@@ -1352,26 +1294,24 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
   }
 
   Future<void> requestNotificationPermission() async {
-  // Android 13+ (API 33+) requires runtime permission
-  if (Theme.of(context).platform == TargetPlatform.android) {
-    final deviceInfo = DeviceInfoPlugin();
-    final androidInfo = await deviceInfo.androidInfo;
-    if (androidInfo.version.sdkInt >= 33) {
-      final permission = await Permission.notification.request();
-      if (!permission.isGranted) {
-        // Optionally show a dialog to the user
+    // Android 13+ (API 33+) requires runtime permission
+    if (Theme.of(context).platform == TargetPlatform.android) {
+      final deviceInfo = DeviceInfoPlugin();
+      final androidInfo = await deviceInfo.androidInfo;
+      if (androidInfo.version.sdkInt >= 33) {
+        final permission = await Permission.notification.request();
+        if (!permission.isGranted) {
+          // Optionally show a dialog to the user
+        }
       }
     }
+    // iOS
+    if (Theme.of(context).platform == TargetPlatform.iOS) {
+      await flutterLocalNotificationsPlugin
+          .resolvePlatformSpecificImplementation<
+            IOSFlutterLocalNotificationsPlugin
+          >()
+          ?.requestPermissions(alert: true, badge: true, sound: true);
+    }
   }
-  // iOS
-  if (Theme.of(context).platform == TargetPlatform.iOS) {
-    await flutterLocalNotificationsPlugin
-        .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>()
-        ?.requestPermissions(
-          alert: true,
-          badge: true,
-          sound: true,
-        );
-  }
-}
 }
