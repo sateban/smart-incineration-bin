@@ -11,6 +11,13 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_database/firebase_database.dart';
+
+// Firebase reference
+final DatabaseReference _settingsRef = FirebaseDatabase.instance.ref(
+  'settings/connection',
+);
 
 var _logger = Logger();
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
@@ -211,6 +218,9 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
   // Smoke Purification
   String smokeValue = "";
 
+  //
+  bool isConnectionSelected = false;
+
   static const primaryColor = Color(0xFF38E07B);
   static const backgroundColor = Color(0xFFF7F8FA);
   static const mutedColor = Color(0xFFE5E7EB);
@@ -258,7 +268,18 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
         setState(() {
           isRequestValid = false;
           _logger.d("setState called in error: isRequestValid=$isRequestValid");
+
+          //  // Ask the user about switching to Firebase if wifi isn't found.
+          // Future<bool?> switchToFirebase = _showWifiErrorDialog(context);
+
+          // _logger.d("isConnectionSelected: $isConnectionSelected");
+          // loadConnectionSelected();
+          // if (switchToFirebase && !isConnectionSelected) {
+          //   setState(() => _useFirebase = true);
+          //   setConnectionSelected(true);
+          // }
         });
+
         // Fluttertoast.showToast(
         //   msg: 'Error sending request to ESP8266: $e',
         //   toastLength: Toast.LENGTH_SHORT, // Auto-hides after ~2 sec
@@ -269,6 +290,8 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
         // );
       } finally {
         _logger.i('Request to ESP8266 completed.');
+
+        // if (!mounted) return;
       }
     });
 
@@ -292,6 +315,11 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
     super.initState();
     // animateProgressBar(); // start animation automatically
     startAutoRequest();
+    loadConnection();
+    // Initialize Firebase if using Firebase
+    if (_useFirebase) {
+      Firebase.initializeApp();
+    }
   }
 
   @override
@@ -401,63 +429,60 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
   Widget build(BuildContext context) {
     final pages = [_buildDashboard(), _buildSettings()];
 
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: Scaffold(
+    return Scaffold(
+      backgroundColor: backgroundColor,
+      appBar: AppBar(
         backgroundColor: backgroundColor,
-        appBar: AppBar(
-          backgroundColor: backgroundColor,
-          elevation: 0,
-          title: const Text(
-            "Smart Hybrid Eco Incineration Bin",
-            style: TextStyle(
-              color: foregroundColor,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
+        elevation: 0,
+        title: const Text(
+          "Smart Hybrid Eco Incineration Bin",
+          style: TextStyle(
+            color: foregroundColor,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
           ),
-          centerTitle: true,
-          // leading: _circleIcon(
-          //   Icons.menu,
-          //   mutedForeground,
-          //   cardColor,
-          //   mutedColor,
+        ),
+        centerTitle: true,
+        // leading: _circleIcon(
+        //   Icons.menu,
+        //   mutedForeground,
+        //   cardColor,
+        //   mutedColor,
+        // ),
+        // actions: [
+        //   Padding(
+        //     padding: const EdgeInsets.only(right: 8.0),
+        //     child: _circleIcon(
+        //       Icons.settings,
+        //       mutedForeground,
+        //       cardColor,
+        //       mutedColor,
+        //     ),
+        //   ),
+        // ],
+      ),
+      body: pages[_selectedIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _selectedIndex,
+        onTap: (index) => setState(() => _selectedIndex = index),
+        selectedItemColor: const Color.fromARGB(255, 0, 0, 0),
+        unselectedItemColor: mutedForeground,
+        backgroundColor: cardColor,
+        showUnselectedLabels: true,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined),
+            label: 'Home',
+          ),
+          // BottomNavigationBarItem(
+          //   icon: Icon(Icons.bar_chart_outlined),
+          //   label: 'Stats',
           // ),
-          // actions: [
-          //   Padding(
-          //     padding: const EdgeInsets.only(right: 8.0),
-          //     child: _circleIcon(
-          //       Icons.settings,
-          //       mutedForeground,
-          //       cardColor,
-          //       mutedColor,
-          //     ),
-          //   ),
-          // ],
-        ),
-        body: pages[_selectedIndex],
-        bottomNavigationBar: BottomNavigationBar(
-          currentIndex: _selectedIndex,
-          onTap: (index) => setState(() => _selectedIndex = index),
-          selectedItemColor: const Color.fromARGB(255, 0, 0, 0),
-          unselectedItemColor: mutedForeground,
-          backgroundColor: cardColor,
-          showUnselectedLabels: true,
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home_outlined),
-              label: 'Home',
-            ),
-            // BottomNavigationBarItem(
-            //   icon: Icon(Icons.bar_chart_outlined),
-            //   label: 'Stats',
-            // ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.settings_outlined),
-              label: 'Settings',
-            ),
-          ],
-        ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings_outlined),
+            label: 'Settings',
+          ),
+        ],
       ),
     );
   }
@@ -487,66 +512,67 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
               ),
 
               // ==== Status ====
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    Expanded(
-                      child: Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(
-                            color: Colors.black.withValues(alpha: 0.3),
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.05),
-                              blurRadius: 5,
-                              offset: const Offset(0, 3),
+              if (timerValue != 0)
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                              color: Colors.black.withValues(alpha: 0.3),
                             ),
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: const [
-                                Icon(
-                                  Icons.info_outline,
-                                  size: 20,
-                                  color: Colors.black,
-                                ),
-                                SizedBox(width: 6),
-                                Text(
-                                  "Status: Process Complete",
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.05),
+                                blurRadius: 5,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.info_outline,
+                                    size: 20,
+                                    color: Colors.black,
+                                  ),
+                                  SizedBox(width: 6),
+                                  Text(
+                                    "Status: Process Complete",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 15,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              const Center(
+                                child: Text(
+                                  "Safe to open when temperature is below 50°",
                                   style: TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 15,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 14,
+                                    color: Color.fromARGB(255, 92, 92, 92),
                                   ),
                                 ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            const Center(
-                              child: Text(
-                                "Safe to open when temperature is below 50°",
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 14,
-                                  color: Color.fromARGB(255, 92, 92, 92),
-                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
 
               // ==== Heat Level & Timer ====
               Padding(
@@ -644,6 +670,16 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w600,
                                   fontSize: 24,
+                                ),
+                              ),
+                              Text(
+                                isRequestValid
+                                    ? ""
+                                    : "Offline mode — some features unavailable",
+                                style: const TextStyle(
+                                  // fontWeight: FontWeight.w600,
+                                  fontSize: 12,
+                                  fontStyle: FontStyle.italic,
                                 ),
                               ),
                             ],
@@ -858,13 +894,13 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
                       const Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            "Idle",
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.black54,
-                            ),
-                          ),
+                          // Text(
+                          //   "Idle",
+                          //   style: TextStyle(
+                          //     fontSize: 12,
+                          //     color: Colors.black54,
+                          //   ),
+                          // ),
                           Text(
                             "Heating",
                             style: TextStyle(
@@ -916,7 +952,7 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
                       ),
                       minimumSize: const Size.fromHeight(56),
                     ),
-                    onPressed: timerValue != 0
+                    onPressed: timerValue != 0 && isRequestValid
                         ? () async {
                             Fluttertoast.showToast(
                               msg: "Starting",
@@ -954,6 +990,7 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
+                            color: Color.fromARGB(255, 255, 255, 255),
                           ),
                         ),
                       ],
@@ -964,7 +1001,7 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
                 Expanded(
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: mutedColor,
+                      backgroundColor: const Color.fromARGB(255, 184, 184, 184),
                       foregroundColor: foregroundColor,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(1),
@@ -994,8 +1031,8 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(
-                          Icons.stop_outlined,
-                          color: Color.fromARGB(255, 94, 94, 94),
+                          Icons.stop,
+                          color: Color.fromARGB(255, 255, 255, 255),
                           size: 24,
                         ),
                         SizedBox(width: 8),
@@ -1004,7 +1041,7 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            color: Color.fromARGB(255, 94, 94, 94),
+                            color: Color.fromARGB(255, 255, 255, 255),
                           ),
                         ),
                       ],
@@ -1061,11 +1098,24 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
               ),
               Switch(
                 value: _useFirebase,
-                activeColor: Colors.blue,
-                onChanged: (value) {
+                activeThumbColor: Colors.blue,
+                onChanged: (value) async {
                   setState(() {
                     _useFirebase = value;
+                    setConnectionToWifi(!_useFirebase);
                   });
+
+                  // Update Firebase Realtime Database
+                  try {
+                    await FirebaseDatabase.instance
+                        .ref('settings/connection/mode')
+                        .set(value);
+                    _logger.i(
+                      'Firebase settings/connection/mode updated: $value',
+                    );
+                  } catch (e) {
+                    _logger.e('Failed to update Firebase: $e');
+                  }
                 },
               ),
               const Text(
@@ -1313,5 +1363,64 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
           >()
           ?.requestPermissions(alert: true, badge: true, sound: true);
     }
+  }
+
+  //
+  Future<bool?> _showWifiErrorDialog(BuildContext context) {
+    return showDialog<bool>(
+      context: context,
+      useRootNavigator: true,
+      barrierDismissible: false, // user must choose an option
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          title: const Text(
+            "Connection Issue",
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          content: const Text(
+            "Unable to find device via Wi-Fi. Switch to Firebase connection?",
+            style: TextStyle(fontSize: 15),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                // 👇 Keep current settings
+                Navigator.of(context).pop(false); // return false
+              },
+              child: const Text(
+                "Keep settings",
+                style: TextStyle(color: Colors.grey),
+              ),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.black),
+              onPressed: () {
+                // 👇 Handle switching to Firebase
+                Navigator.of(context).pop(true); // return true
+              },
+              child: const Text("Okay", style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> loadConnection() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _logger.d("loadConnection for Wifi: ${prefs.getBool('wifi')}");
+      _useFirebase = !(prefs.getBool('wifi') ?? false);
+    });
+  }
+
+  Future<void> setConnectionToWifi(bool value) async {
+    _logger.d("_useFirebase: $_useFirebase");
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('wifi', value);
+    _logger.d("prefs.getBool('wifi') ${prefs.getBool('wifi')}");
   }
 }

@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "714958635523",
+    "firebase_url": "https://smart-incineration-default-rtdb.firebaseio.com",
+    "project_id": "smart-incineration",
+    "storage_bucket": "smart-incineration.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:714958635523:android:f122f7d390a3d580a08436",
+        "android_client_info": {
+          "package_name": "com.example.incineration_bin"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAOXIuqAlikk97WTwhNJTGaiZOgnj34QCc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
