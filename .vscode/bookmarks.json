@@ -14,27 +14,37 @@
 					"label": "Variable for Chamber Temperature"
 				},
 				{
-					"line": 507,
+					"line": 245,
+					"column": 41,
+					"label": "🖋️ Retrieved Info from ESP8266"
+				},
+				{
+					"line": 508,
 					"column": 23,
 					"label": "ℹ️ Status"
 				},
 				{
-					"line": 954,
+					"line": 969,
 					"column": 16,
 					"label": "Settings"
 				},
 				{
-					"line": 1014,
+					"line": 1029,
 					"column": 6,
 					"label": ""
 				},
 				{
-					"line": 1038,
+					"line": 1053,
 					"column": 24,
 					"label": "Notification"
 				},
 				{
-					"line": 1341,
+					"line": 1247,
+					"column": 39,
+					"label": "🖋️ Retrieved Info from ESP8266"
+				},
+				{
+					"line": 1356,
 					"column": 22,
 					"label": "⚙️ ShowWifiErrorDialog"
 				}

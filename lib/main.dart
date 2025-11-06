@@ -235,11 +235,12 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
 
     _requestTimer = Timer.periodic(const Duration(seconds: 5), (timer) async {
       try {
+        String body = _useFirebase.toString();
         final url = Uri.parse('http://esp8266-device.local/info');
         final response = await http.post(
           url,
           headers: {'Content-Type': 'text/plain'},
-          // body: status, // e.g. 'ON' or 'OFF'
+          body: body, // e.g. 'ON' or 'OFF'
         );
 
         if (response.statusCode == 200) {
@@ -688,12 +689,29 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
                       ),
                       const SizedBox(height: 12),
                       Center(
-                        child: LinearProgressIndicator(
-                          value: temperature.toDouble(),
-                          minHeight: 10,
-                          backgroundColor: Colors.grey[300],
-                          valueColor: const AlwaysStoppedAnimation(Colors.red),
-                          borderRadius: BorderRadius.circular(10),
+                        child: TweenAnimationBuilder<Color?>(
+                          tween: ColorTween(
+                            begin: temperature > 100
+                                ? Colors.red
+                                : Colors.orange,
+                            end: temperature > 100
+                                ? Colors.red.withOpacity(0.4)
+                                : Colors.orange,
+                          ),
+                          duration: const Duration(seconds: 1),
+                          builder: (context, color, _) {
+                            return LinearProgressIndicator(
+                              value: (temperature / 700).clamp(0, 1).toDouble(),
+                              minHeight: 10,
+                              backgroundColor: Colors.grey[300],
+                              valueColor: AlwaysStoppedAnimation(color),
+                              borderRadius: BorderRadius.circular(10),
+                            );
+                          },
+                          // Makes it glow by looping the animation
+                          onEnd: () {
+                            // Trigger animation again
+                          },
                         ),
                       ),
                     ],
