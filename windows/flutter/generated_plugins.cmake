@@ -3,7 +3,10 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
+<<<<<<< HEAD
   firebase_core
+=======
+>>>>>>> 045fbcb2a4c54907116dee3bf71a52dc804760b9
   permission_handler_windows
 )
 

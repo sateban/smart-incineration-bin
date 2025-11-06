@@ -4,49 +4,19 @@
 			"path": "lib/main.dart",
 			"bookmarks": [
 				{
-					"line": 196,
+					"line": 758,
 					"column": 9,
 					"label": ""
 				},
 				{
-					"line": 214,
+					"line": 776,
 					"column": 9,
 					"label": "Variable for Chamber Temperature"
 				},
 				{
-					"line": 245,
+					"line": 807,
 					"column": 41,
 					"label": "🖋️ Retrieved Info from ESP8266"
-				},
-				{
-					"line": 508,
-					"column": 23,
-					"label": "ℹ️ Status"
-				},
-				{
-					"line": 973,
-					"column": 16,
-					"label": "Settings"
-				},
-				{
-					"line": 1033,
-					"column": 6,
-					"label": ""
-				},
-				{
-					"line": 1057,
-					"column": 24,
-					"label": "Notification"
-				},
-				{
-					"line": 1251,
-					"column": 39,
-					"label": "🖋️ Retrieved Info from ESP8266"
-				},
-				{
-					"line": 1360,
-					"column": 22,
-					"label": "⚙️ ShowWifiErrorDialog"
 				}
 			]
 		}
