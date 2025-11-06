@@ -4,29 +4,39 @@
 			"path": "lib/main.dart",
 			"bookmarks": [
 				{
-					"line": 197,
+					"line": 196,
 					"column": 9,
 					"label": ""
 				},
 				{
-					"line": 212,
+					"line": 214,
 					"column": 9,
 					"label": "Variable for Chamber Temperature"
 				},
 				{
-					"line": 935,
+					"line": 507,
+					"column": 23,
+					"label": "ℹ️ Status"
+				},
+				{
+					"line": 954,
 					"column": 16,
 					"label": "Settings"
 				},
 				{
-					"line": 994,
+					"line": 1014,
 					"column": 6,
 					"label": ""
 				},
 				{
-					"line": 1018,
+					"line": 1038,
 					"column": 24,
 					"label": "Notification"
+				},
+				{
+					"line": 1341,
+					"column": 22,
+					"label": "⚙️ ShowWifiErrorDialog"
 				}
 			]
 		}
