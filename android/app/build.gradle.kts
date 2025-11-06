@@ -46,11 +46,7 @@ flutter {
 
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
-<<<<<<< HEAD
     implementation(platform("com.google.firebase:firebase-bom:34.5.0"))
     implementation("com.google.firebase:firebase-database")
     implementation("com.google.firebase:firebase-analytics")
 }
-=======
-}
->>>>>>> 045fbcb2a4c54907116dee3bf71a52dc804760b9
