@@ -24,27 +24,27 @@
 					"label": "ℹ️ Status"
 				},
 				{
-					"line": 964,
+					"line": 973,
 					"column": 16,
 					"label": "Settings"
 				},
 				{
-					"line": 1024,
+					"line": 1033,
 					"column": 6,
 					"label": ""
 				},
 				{
-					"line": 1048,
+					"line": 1057,
 					"column": 24,
 					"label": "Notification"
 				},
 				{
-					"line": 1242,
+					"line": 1251,
 					"column": 39,
 					"label": "🖋️ Retrieved Info from ESP8266"
 				},
 				{
-					"line": 1351,
+					"line": 1360,
 					"column": 22,
 					"label": "⚙️ ShowWifiErrorDialog"
 				}

@@ -688,35 +688,44 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
                         ],
                       ),
                       const SizedBox(height: 12),
-                      Center(
-                        child: ShaderMask(
-                          shaderCallback: (Rect rect) {
-                            return LinearGradient(
-                              colors: temperature > 100
-                                  ? [
-                                      Colors.red,
-                                      Colors.deepOrange,
-                                      Colors.yellow,
-                                    ] // hot gradient
-                                  : [
-                                      Colors.green,
-                                      Colors.yellow,
-                                    ], // normal gradient
-                              begin: Alignment.centerLeft,
-                              end: Alignment.centerRight,
-                            ).createShader(rect);
-                          },
-                          child: LinearProgressIndicator(
-                            value: (temperature / 700).clamp(0, 1),
-                            minHeight: 10,
-                            backgroundColor: Colors.grey[300],
-                            valueColor: const AlwaysStoppedAnimation(
-                              Colors.white,
-                            ), // required
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
+                    Center(
+  child: SizedBox(
+    width: double.infinity,  // ✅ makes it full width
+    height: 10,
+    child: ClipRRect(
+      borderRadius: BorderRadius.circular(10),
+      child: Stack(
+        children: [
+          Container(color: Colors.grey[300]),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final progress = (temperature / 700).clamp(0, 1);
+              return Align(
+                alignment: Alignment.centerLeft,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(10),  // ✅ round INNER shape too
+                  child: Container(
+                    width: constraints.maxWidth * progress,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: temperature > 100
+                            ? [const Color.fromARGB(255, 255, 199, 30)
+                              ,const Color.fromARGB(255, 255, 99, 56)
+                              ,const Color.fromARGB(255, 228, 0, 0)]
+                            : [const Color.fromARGB(255, 255, 174, 93)
+                              ,const Color.fromARGB(255, 223, 0, 0)],
                       ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    ),
+  ),
+),
                     ],
                   ),
                 ),
