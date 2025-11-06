@@ -235,11 +235,12 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
 
     _requestTimer = Timer.periodic(const Duration(seconds: 5), (timer) async {
       try {
+        String body = _useFirebase.toString();
         final url = Uri.parse('http://esp8266-device.local/info');
         final response = await http.post(
           url,
           headers: {'Content-Type': 'text/plain'},
-          // body: status, // e.g. 'ON' or 'OFF'
+          body: body, // e.g. 'ON' or 'OFF'
         );
 
         if (response.statusCode == 200) {
@@ -687,15 +688,44 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
                         ],
                       ),
                       const SizedBox(height: 12),
-                      Center(
-                        child: LinearProgressIndicator(
-                          value: temperature.toDouble(),
-                          minHeight: 10,
-                          backgroundColor: Colors.grey[300],
-                          valueColor: const AlwaysStoppedAnimation(Colors.red),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
+                    Center(
+  child: SizedBox(
+    width: double.infinity,  // ✅ makes it full width
+    height: 10,
+    child: ClipRRect(
+      borderRadius: BorderRadius.circular(10),
+      child: Stack(
+        children: [
+          Container(color: Colors.grey[300]),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final progress = (temperature / 700).clamp(0, 1);
+              return Align(
+                alignment: Alignment.centerLeft,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(10),  // ✅ round INNER shape too
+                  child: Container(
+                    width: constraints.maxWidth * progress,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: temperature > 100
+                            ? [const Color.fromARGB(255, 255, 199, 30)
+                              ,const Color.fromARGB(255, 255, 99, 56)
+                              ,const Color.fromARGB(255, 228, 0, 0)]
+                            : [const Color.fromARGB(255, 255, 174, 93)
+                              ,const Color.fromARGB(255, 223, 0, 0)],
                       ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    ),
+  ),
+),
                     ],
                   ),
                 ),

@@ -46,3 +46,4 @@ app.*.map.json
 
 # API Keys
 /android/app/google-services.json
+google-services.json
