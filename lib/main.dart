@@ -689,29 +689,32 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
                       ),
                       const SizedBox(height: 12),
                       Center(
-                        child: TweenAnimationBuilder<Color?>(
-                          tween: ColorTween(
-                            begin: temperature > 100
-                                ? Colors.red
-                                : Colors.orange,
-                            end: temperature > 100
-                                ? Colors.red.withOpacity(0.4)
-                                : Colors.orange,
+                        child: ShaderMask(
+                          shaderCallback: (Rect rect) {
+                            return LinearGradient(
+                              colors: temperature > 100
+                                  ? [
+                                      Colors.red,
+                                      Colors.deepOrange,
+                                      Colors.yellow,
+                                    ] // hot gradient
+                                  : [
+                                      Colors.green,
+                                      Colors.yellow,
+                                    ], // normal gradient
+                              begin: Alignment.centerLeft,
+                              end: Alignment.centerRight,
+                            ).createShader(rect);
+                          },
+                          child: LinearProgressIndicator(
+                            value: (temperature / 700).clamp(0, 1),
+                            minHeight: 10,
+                            backgroundColor: Colors.grey[300],
+                            valueColor: const AlwaysStoppedAnimation(
+                              Colors.white,
+                            ), // required
+                            borderRadius: BorderRadius.circular(10),
                           ),
-                          duration: const Duration(seconds: 1),
-                          builder: (context, color, _) {
-                            return LinearProgressIndicator(
-                              value: (temperature / 700).clamp(0, 1).toDouble(),
-                              minHeight: 10,
-                              backgroundColor: Colors.grey[300],
-                              valueColor: AlwaysStoppedAnimation(color),
-                              borderRadius: BorderRadius.circular(10),
-                            );
-                          },
-                          // Makes it glow by looping the animation
-                          onEnd: () {
-                            // Trigger animation again
-                          },
                         ),
                       ),
                     ],
