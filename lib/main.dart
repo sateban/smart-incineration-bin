@@ -221,6 +221,9 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
   //
   bool isConnectionSelected = false;
 
+  // For timer when done
+  bool isTimerDone = false;
+
   static const primaryColor = Color(0xFF38E07B);
   static const backgroundColor = Color(0xFFF7F8FA);
   static const mutedColor = Color(0xFFE5E7EB);
@@ -343,6 +346,7 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
       if (response.body == "done") {
         _logger.d("Timer completed!");
         timer.cancel();
+        isTimerDone = true;
         // progressValue = 1.0;
         // 👉 You can show a Snackbar, Toast, or call setState() here
       } 
@@ -520,7 +524,7 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
               ),
 
               // ==== Status ====
-              if (timerValue != 0)
+              if (isTimerDone)
                 Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Row(
@@ -1002,17 +1006,22 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
 
                             bool start = await sendCommand(
                               "timer:${timerValue.toInt() * 60}",
+                              // "timer:${10}",
                             );
                             _logger.i("Start Status: $start");
                             if (start) {
                               isTimerStarted = true;
                               progressValue = 0.25;
                               startTimer(timerValue.toInt() * 60);
+                              // startTimer(10);
                               showNotification(
                                 "Smart Hybrid Eco Bin",
                                 "Device has started",
                               );
                               checkStatus();
+
+                              isTimerDone = false;
+
                             } else {
                               isTimerStarted = false;
                             }
@@ -1062,6 +1071,7 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
                             if (start) startTimer(0);
 
                             progressValue = 0.0;
+                            isTimerDone = false;
 
                             hideNotification();
                             isTimerStarted = false;
