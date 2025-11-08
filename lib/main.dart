@@ -592,23 +592,23 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    Expanded(
-                      child: _controlCard(
-                        icon: Icons.local_fire_department_outlined,
-                        title: "Heat Level",
-                        sliderValue: heatLevel,
-                        onChanged: (v) {
-                          setState(() => heatLevel = v);
-                        },
-                        min: 0,
-                        max: 100,
-                        divisions: 100,
-                        valueText: "${(heatLevel).round()}%",
-                        subText:
-                            "${(tMin + ((heatLevel - 1) / (100 - 1)) * (tMax - tMin)).round()}°C",
-                      ),
-                    ),
-                    const SizedBox(width: 16),
+                    // Expanded(
+                    //   child: _controlCard(
+                    //     icon: Icons.local_fire_department_outlined,
+                    //     title: "Heat Level",
+                    //     sliderValue: heatLevel,
+                    //     onChanged: (v) {
+                    //       setState(() => heatLevel = v);
+                    //     },
+                    //     min: 0,
+                    //     max: 100,
+                    //     divisions: 100,
+                    //     valueText: "${(heatLevel).round()}%",
+                    //     subText:
+                    //         "${(tMin + ((heatLevel - 1) / (100 - 1)) * (tMax - tMin)).round()}°C",
+                    //   ),
+                    // ),
+                    // const SizedBox(width: 16),
                     Expanded(
                       child: _controlCard(
                         icon: Icons.timer_outlined,
