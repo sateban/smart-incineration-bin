@@ -343,7 +343,7 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
       if (response.body == "done") {
         _logger.d("Timer completed!");
         timer.cancel();
-        progressValue = 1.0;
+        // progressValue = 1.0;
         // 👉 You can show a Snackbar, Toast, or call setState() here
       } 
       // else if (response.body == "incinerating") {
@@ -1060,6 +1060,8 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
                             bool start = await sendCommand("timer:0");
                             _logger.i("Start Status: $start");
                             if (start) startTimer(0);
+
+                            progressValue = 0.0;
 
                             hideNotification();
                             isTimerStarted = false;
