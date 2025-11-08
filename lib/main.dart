@@ -345,13 +345,15 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
         timer.cancel();
         progressValue = 1.0;
         // 👉 You can show a Snackbar, Toast, or call setState() here
-      } else if (response.body == "incinerating") {
-        progressValue = 0.75;
-      } else if (response.body == "heating") {
-        progressValue = 0.25;
-      } else {
-        progressValue = 0.00;
-      }
+      } 
+      // else if (response.body == "incinerating") {
+      //   progressValue = 0.75;
+      // } else if (response.body == "heating") {
+      //   progressValue = 0.25;
+      // } 
+      // else {
+      //   progressValue = 0.00;
+      // }
     });
   }
 
@@ -367,6 +369,8 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
       if (_remainingSeconds > 0) {
         setState(() {
           _remainingSeconds--;
+
+
         });
       } else {
         timer.cancel();
@@ -985,7 +989,7 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
                       ),
                       minimumSize: const Size.fromHeight(56),
                     ),
-                    onPressed: timerValue != 0 && isRequestValid
+                    onPressed: timerValue != 0 && isRequestValid && _remainingSeconds <= 0
                         ? () async {
                             Fluttertoast.showToast(
                               msg: "Starting",
@@ -1002,6 +1006,7 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
                             _logger.i("Start Status: $start");
                             if (start) {
                               isTimerStarted = true;
+                              progressValue = 0.25;
                               startTimer(timerValue.toInt() * 60);
                               showNotification(
                                 "Smart Hybrid Eco Bin",
@@ -1137,6 +1142,8 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
                     _useFirebase = value;
                     setConnectionToWifi(!_useFirebase);
                   });
+
+                  sendCommand(_useFirebase ? "CONNF" : "CONNL");
 
                   // Update Firebase Realtime Database
                   try {
