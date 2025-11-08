@@ -270,6 +270,9 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
           isRequestValid = false;
           _logger.d("setState called in error: isRequestValid=$isRequestValid");
 
+          // When encountered an error stop the timer
+          timerValue = 0;
+
           //  // Ask the user about switching to Firebase if wifi isn't found.
           // Future<bool?> switchToFirebase = _showWifiErrorDialog(context);
 
