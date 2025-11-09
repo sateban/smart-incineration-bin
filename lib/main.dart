@@ -216,7 +216,7 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
   Timer? _requestTimer;
 
   // Smoke Purification
-  String smokeValue = "";
+  String smokeValue = "INACTIVE";
 
   //
   bool isConnectionSelected = false;
@@ -260,7 +260,7 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
 
             // Set the progress value to 50% when the temperature has increased
             if (temperature > 80) {
-              progressValue = 0.5;
+              progressValue = 0.4;
             }
           });
         } else {
@@ -351,12 +351,20 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
       if (response.body == "done") {
         _logger.d("Timer completed!");
         timer.cancel();
-        showNotification("Smart Hybrid Eco Bin", "Device has started");
+        showNotification("Smart Hybrid Eco Bin", "Process completed, purification started.");
 
-        isTimerDone = true;
-        progressValue = 1.0;
+        // Start Smoke Purification once done
+        sendCommand("FANON");
+        // Set progress to 75% progress
+        progressValue = 0.8;
+
         // progressValue = 1.0;
         // 👉 You can show a Snackbar, Toast, or call setState() here
+      } else if (response.body == "DONEPURIFICATION"){
+        isTimerDone = true;
+        progressValue = 1.0;
+        isTimerStarted = false;
+
       }
       // else if (response.body == "incinerating") {
       //   progressValue = 0.75;
@@ -834,9 +842,9 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
                               ],
                             ),
                             const SizedBox(height: 12),
-                            const Center(
+                            Center(
                               child: Text(
-                                "INACTIVE",
+                                smokeValue,
                                 style: TextStyle(
                                   fontWeight: FontWeight.w700,
                                   fontSize: 16,
@@ -976,13 +984,6 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
                       const Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          // Text(
-                          //   "Idle",
-                          //   style: TextStyle(
-                          //     fontSize: 12,
-                          //     color: Colors.black54,
-                          //   ),
-                          // ),
                           Text(
                             "Heating",
                             style: TextStyle(
@@ -992,6 +993,13 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
                           ),
                           Text(
                             "Incinerating",
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.black54,
+                            ),
+                          ),
+                          Text(
+                            "Purification",
                             style: TextStyle(
                               fontSize: 12,
                               color: Colors.black54,
@@ -1056,7 +1064,8 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
 
                             if (start) {
                               isTimerStarted = true;
-                              progressValue = 0.25;
+                              // progressValue = 0.25;
+                              progressValue = 0.15;
                               // startTimer(timerValue.toInt() * 60);
                               startTimer(10);
                               showNotification(
