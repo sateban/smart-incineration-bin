@@ -4,38 +4,73 @@
 			"path": "lib/main.dart",
 			"bookmarks": [
 				{
-					"line": 372,
+					"line": 234,
+					"column": 27,
+					"label": ""
+				},
+				{
+					"line": 355,
+					"column": 33,
+					"label": "Done Incineration"
+				},
+				{
+					"line": 356,
+					"column": 38,
+					"label": "Timer"
+				},
+				{
+					"line": 409,
 					"column": 10,
 					"label": ""
 				},
 				{
-					"line": 765,
+					"line": 562,
+					"column": 28,
+					"label": "Status"
+				},
+				{
+					"line": 805,
 					"column": 9,
 					"label": ""
 				},
 				{
-					"line": 783,
+					"line": 823,
 					"column": 9,
 					"label": "Variable for Chamber Temperature"
 				},
 				{
-					"line": 814,
+					"line": 854,
 					"column": 41,
 					"label": "🖋️ Retrieved Info from ESP8266"
 				},
 				{
-					"line": 991,
+					"line": 862,
+					"column": 33,
+					"label": "SMOKE PURIFICATION"
+				},
+				{
+					"line": 1047,
 					"column": 43,
 					"label": ""
 				},
 				{
-					"line": 1061,
+					"line": 1124,
 					"column": 53,
 					"label": ""
 				},
 				{
-					"line": 1144,
+					"line": 1138,
+					"column": 50,
+					"label": ""
+				},
+				{
+					"line": 1207,
 					"column": 34,
+					"label": ""
+				},
+				{
+					"line": 1464,
+					"column": 10,
 					"label": ""
 				}
 			]
