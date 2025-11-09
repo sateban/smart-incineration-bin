@@ -257,6 +257,11 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
             _logger.d(
               "setState called: isRequestValid=$isRequestValid, temperature=$temperature",
             );
+
+            // Set the progress value to 50% when the temperature has increased
+            if (temperature > 80) {
+              progressValue = 0.5;
+            }
           });
         } else {
           _logger.w(
@@ -346,15 +351,18 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
       if (response.body == "done") {
         _logger.d("Timer completed!");
         timer.cancel();
+        showNotification("Smart Hybrid Eco Bin", "Device has started");
+
         isTimerDone = true;
+        progressValue = 1.0;
         // progressValue = 1.0;
         // 👉 You can show a Snackbar, Toast, or call setState() here
-      } 
+      }
       // else if (response.body == "incinerating") {
       //   progressValue = 0.75;
       // } else if (response.body == "heating") {
       //   progressValue = 0.25;
-      // } 
+      // }
       // else {
       //   progressValue = 0.00;
       // }
@@ -373,8 +381,6 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
       if (_remainingSeconds > 0) {
         setState(() {
           _remainingSeconds--;
-
-
         });
       } else {
         timer.cancel();
@@ -699,44 +705,79 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
                         ],
                       ),
                       const SizedBox(height: 12),
-                    Center(
-  child: SizedBox(
-    width: double.infinity,  // ✅ makes it full width
-    height: 10,
-    child: ClipRRect(
-      borderRadius: BorderRadius.circular(10),
-      child: Stack(
-        children: [
-          Container(color: Colors.grey[300]),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final progress = (temperature / 700).clamp(0, 1);
-              return Align(
-                alignment: Alignment.centerLeft,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(10),  // ✅ round INNER shape too
-                  child: Container(
-                    width: constraints.maxWidth * progress,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: temperature > 100
-                            ? [const Color.fromARGB(255, 255, 199, 30)
-                              ,const Color.fromARGB(255, 255, 99, 56)
-                              ,const Color.fromARGB(255, 228, 0, 0)]
-                            : [const Color.fromARGB(255, 255, 174, 93)
-                              ,const Color.fromARGB(255, 223, 0, 0)],
+                      Center(
+                        child: SizedBox(
+                          width: double.infinity, // ✅ makes it full width
+                          height: 10,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: Stack(
+                              children: [
+                                Container(color: Colors.grey[300]),
+                                LayoutBuilder(
+                                  builder: (context, constraints) {
+                                    final progress = (temperature / 700).clamp(
+                                      0,
+                                      1,
+                                    );
+                                    return Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(
+                                          10,
+                                        ), // ✅ round INNER shape too
+                                        child: Container(
+                                          width:
+                                              constraints.maxWidth * progress,
+                                          decoration: BoxDecoration(
+                                            gradient: LinearGradient(
+                                              colors: temperature > 100
+                                                  ? [
+                                                      const Color.fromARGB(
+                                                        255,
+                                                        255,
+                                                        199,
+                                                        30,
+                                                      ),
+                                                      const Color.fromARGB(
+                                                        255,
+                                                        255,
+                                                        99,
+                                                        56,
+                                                      ),
+                                                      const Color.fromARGB(
+                                                        255,
+                                                        228,
+                                                        0,
+                                                        0,
+                                                      ),
+                                                    ]
+                                                  : [
+                                                      const Color.fromARGB(
+                                                        255,
+                                                        255,
+                                                        174,
+                                                        93,
+                                                      ),
+                                                      const Color.fromARGB(
+                                                        255,
+                                                        223,
+                                                        0,
+                                                        0,
+                                                      ),
+                                                    ],
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
-        ],
-      ),
-    ),
-  ),
-),
                     ],
                   ),
                 ),
@@ -993,7 +1034,10 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
                       ),
                       minimumSize: const Size.fromHeight(56),
                     ),
-                    onPressed: timerValue != 0 && isRequestValid && _remainingSeconds <= 0
+                    onPressed:
+                        timerValue != 0 &&
+                            isRequestValid &&
+                            _remainingSeconds <= 0
                         ? () async {
                             Fluttertoast.showToast(
                               msg: "Starting",
@@ -1005,15 +1049,16 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
                             );
 
                             bool start = await sendCommand(
-                              "timer:${timerValue.toInt() * 60}",
-                              // "timer:${10}",
+                              // "timer:${timerValue.toInt() * 60}",
+                              "timer:${10}",
                             );
                             _logger.i("Start Status: $start");
+
                             if (start) {
                               isTimerStarted = true;
                               progressValue = 0.25;
-                              startTimer(timerValue.toInt() * 60);
-                              // startTimer(10);
+                              // startTimer(timerValue.toInt() * 60);
+                              startTimer(10);
                               showNotification(
                                 "Smart Hybrid Eco Bin",
                                 "Device has started",
@@ -1021,7 +1066,6 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
                               checkStatus();
 
                               isTimerDone = false;
-
                             } else {
                               isTimerStarted = false;
                             }
@@ -1055,7 +1099,7 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
                       ),
                       minimumSize: const Size.fromHeight(56),
                     ),
-                    onPressed: timerValue != 0
+                    onPressed: timerValue != 0 && isRequestValid
                         ? () async {
                             Fluttertoast.showToast(
                               msg: "Stopping, please wait...",
