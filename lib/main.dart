@@ -262,6 +262,10 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
             if (temperature > 80) {
               progressValue = 0.4;
             }
+
+            smokeValue = "IDLE";
+
+            // 
           });
         } else {
           _logger.w(
@@ -280,6 +284,7 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
 
           // When encountered an error stop the timer
           timerValue = 0;
+          smokeValue = "INACTIVE";
 
           //  // Ask the user about switching to Firebase if wifi isn't found.
           // Future<bool?> switchToFirebase = _showWifiErrorDialog(context);
@@ -350,22 +355,31 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
       _logger.d("Check Status: ${response.body}");
       if (response.body == "done") {
         _logger.d("Timer completed!");
-        timer.cancel();
-        showNotification("Smart Hybrid Eco Bin", "Process completed, purification started.");
+        showNotification("Smart Hybrid Eco Bin", "Process completed");
 
         // Start Smoke Purification once done
-        sendCommand("FANON");
+        // sendCommand("FANON");
         // Set progress to 75% progress
-        progressValue = 0.8;
-
-        // progressValue = 1.0;
-        // 👉 You can show a Snackbar, Toast, or call setState() here
-      } else if (response.body == "DONEPURIFICATION"){
+        progressValue = 1.0;
+        smokeValue = "COMPLETED";
         isTimerDone = true;
         progressValue = 1.0;
         isTimerStarted = false;
+        timer.cancel();
 
-      }
+        // progressValue = 1.0;
+        // 👉 You can show a Snackbar, Toast, or call setState() here
+      } 
+      // else if (response.body == "DONEPURIFICATION"){
+      //   timer.cancel();
+      //   showNotification("Smart Hybrid Eco Bin", "Overall process completed");
+      //   _logger.d("DONEPURIFICATION");
+      //   isTimerDone = true;
+      //   progressValue = 1.0;
+      //   isTimerStarted = false;
+      //   smokeValue = "COMPLETED";
+
+      // }
       // else if (response.body == "incinerating") {
       //   progressValue = 0.75;
       // } else if (response.body == "heating") {
@@ -434,20 +448,23 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
   Color getProgressColor(double p) {
     // From blue (cool) → red (hot)
     // return Color.lerp(Colors.blue, Colors.red, progress)!;
-    const c1 = Color(0xFF44A1FF); // cool blue
-    const c2 = Color(0xFFFFB458); // orange
-    const c3 = Color(0xFFFF5339); // red-orange
-    const c4 = Color(0xFFFF0346); // deep red
+    // const c1 = Color(0xFF44A1FF); // cool blue
+    // const c2 = Color(0xFFFFB458); // orange
+    // const c3 = Color(0xFFFF5339); // red-orange
+    // const c4 = Color(0xFFFF0346); // deep red
 
-    if (p <= 0.33) {
+    if (p <= 0.15) {
       // transition: blue → orange
-      return Color.lerp(c1, c2, p / 0.33)!;
-    } else if (p <= 0.66) {
+      return Color.fromRGBO(174, 186, 213, 1);
+    } else if (p <= 0.40) {
       // transition: orange → red-orange
-      return Color.lerp(c2, c3, (p - 0.33) / 0.33)!;
+      return Color.fromRGBO(255, 0, 0, 1);
+    } else if (p <= 0.80) {
+      // transition: orange → red-orange
+      return Color.fromRGBO(72, 216, 130, 1);
     } else {
       // transition: red-orange → deep red
-      return Color.lerp(c3, c4, (p - 0.66) / 0.34)!;
+      return Color.fromRGBO(0, 166, 255, 1);
     }
   }
 
@@ -843,13 +860,23 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
                             ),
                             const SizedBox(height: 12),
                             Center(
-                              child: Text(
+                              child: Column(
+                                children: [
+                              Text(
                                 smokeValue,
                                 style: TextStyle(
                                   fontWeight: FontWeight.w700,
                                   fontSize: 16,
                                 ),
                               ),
+                              Text(
+                                isRequestValid ? "Gas Level: $gas" : "",
+                                style: TextStyle(
+                                  fontStyle: FontStyle.italic,
+                                  fontSize: 12,
+                                ),
+                              ),
+                                ]),
                             ),
                           ],
                         ),
@@ -998,13 +1025,13 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
                               color: Colors.black54,
                             ),
                           ),
-                          Text(
-                            "Purification",
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.black54,
-                            ),
-                          ),
+                          // Text(
+                          //   "Purification",
+                          //   style: TextStyle(
+                          //     fontSize: 12,
+                          //     color: Colors.black54,
+                          //   ),
+                          // ),
                           Text(
                             "Complete",
                             style: TextStyle(
@@ -1043,9 +1070,9 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
                       minimumSize: const Size.fromHeight(56),
                     ),
                     onPressed:
-                        timerValue != 0 &&
+                        (timerValue != 0 &&
                             isRequestValid &&
-                            _remainingSeconds <= 0
+                            _remainingSeconds <= 0) || isTimerDone
                         ? () async {
                             Fluttertoast.showToast(
                               msg: "Starting",
@@ -1064,8 +1091,9 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
 
                             if (start) {
                               isTimerStarted = true;
+                              smokeValue = "ONGOING";
                               // progressValue = 0.25;
-                              progressValue = 0.15;
+                              progressValue = 0.3;
                               // startTimer(timerValue.toInt() * 60);
                               startTimer(10);
                               showNotification(
@@ -1108,7 +1136,7 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
                       ),
                       minimumSize: const Size.fromHeight(56),
                     ),
-                    onPressed: timerValue != 0 && isRequestValid
+                    onPressed: (timerValue != 0 && isRequestValid) || isTimerDone
                         ? () async {
                             Fluttertoast.showToast(
                               msg: "Stopping, please wait...",
