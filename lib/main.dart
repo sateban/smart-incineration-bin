@@ -500,7 +500,7 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
         //       mutedForeground,
         //       cardColor,
         //       mutedColor,
-        //     ),
+        //     ), 
         //   ),
         // ],
       ),
