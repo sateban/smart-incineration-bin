@@ -470,7 +470,7 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
 
   @override
   Widget build(BuildContext context) {
-    final pages = [_buildDashboard(), _buildSettings()];
+    final pages = [_buildDashboard()];
 
     return Scaffold(
       backgroundColor: backgroundColor,
