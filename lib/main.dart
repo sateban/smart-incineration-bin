@@ -502,7 +502,7 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
         //       mutedColor,
         //     ), 
         //   ),
-        // ],
+        // ], 
       ),
       body: pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
