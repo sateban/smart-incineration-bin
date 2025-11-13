@@ -208,6 +208,10 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
   double temperature = 0.0;
   int gas = 0;
 
+  // For gas concentration notification
+  bool isGasConcentrated = false;
+  bool isGasNotifShown = false;
+
   // For checking
   bool isRunning = false;
   bool isRequestValid = false;
@@ -261,6 +265,17 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
             // Set the progress value to 50% when the temperature has increased
             if (temperature > 80) {
               progressValue = 0.4;
+            }
+
+            isGasConcentrated = gas > 100;
+
+            if(!isGasConcentrated){
+              isGasNotifShown = false;
+            }
+
+            if(!isGasNotifShown && isGasConcentrated){
+              showNotification("Smart Hybrid Eco Bin", "Process completed");
+              isGasNotifShown = true;
             }
 
             smokeValue = "IDLE";
