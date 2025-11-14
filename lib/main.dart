@@ -11,13 +11,13 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_database/firebase_database.dart';
+// import 'package:firebase_core/firebase_core.dart';
+// import 'package:firebase_database/firebase_database.dart';
 
 // Firebase reference
-final DatabaseReference _settingsRef = FirebaseDatabase.instance.ref(
-  'settings/connection',
-);
+// final DatabaseReference _settingsRef = FirebaseDatabase.instance.ref(
+//   'settings/connection',
+// );
 
 var _logger = Logger();
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
@@ -208,6 +208,10 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
   double temperature = 0.0;
   int gas = 0;
 
+  // For gas concentration notification
+  bool isGasConcentrated = false;
+  bool isGasNotifShown = false;
+
   // For checking
   bool isRunning = false;
   bool isRequestValid = false;
@@ -238,7 +242,7 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
 
     _requestTimer = Timer.periodic(const Duration(seconds: 5), (timer) async {
       try {
-        String body = _useFirebase.toString();
+        String body = "false"; //_useFirebase.toString();
         final url = Uri.parse('http://esp8266-device.local/info');
         final response = await http.post(
           url,
@@ -261,6 +265,17 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
             // Set the progress value to 50% when the temperature has increased
             if (temperature > 80) {
               progressValue = 0.4;
+            }
+
+            isGasConcentrated = gas > 100 && isTimerStarted;
+
+            if(!isGasConcentrated){
+              isGasNotifShown = false;
+            }
+
+            if(!isGasNotifShown && isGasConcentrated){
+              showNotification("Smart Hybrid Eco Bin Alert", "Elevated gas concentration detected. It is recommended to turn off the device to reduce pressure build.");
+              isGasNotifShown = true;
             }
 
             smokeValue = "IDLE";
@@ -334,9 +349,9 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
     startAutoRequest();
     loadConnection();
     // Initialize Firebase if using Firebase
-    if (_useFirebase) {
-      Firebase.initializeApp();
-    }
+    // if (_useFirebase) {
+    //   Firebase.initializeApp();
+    // }
   }
 
   @override
@@ -502,7 +517,7 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
         //       mutedColor,
         //     ), 
         //   ),
-        // ],
+        // ], 
       ),
       body: pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
@@ -1239,16 +1254,16 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
                   sendCommand(_useFirebase ? "CONNF" : "CONNL");
 
                   // Update Firebase Realtime Database
-                  try {
-                    await FirebaseDatabase.instance
-                        .ref('settings/connection/mode')
-                        .set(value);
-                    _logger.i(
-                      'Firebase settings/connection/mode updated: $value',
-                    );
-                  } catch (e) {
-                    _logger.e('Failed to update Firebase: $e');
-                  }
+                  // try {
+                  //   await FirebaseDatabase.instance
+                  //       .ref('settings/connection/mode')
+                  //       .set(value);
+                  //   _logger.i(
+                  //     'Firebase settings/connection/mode updated: $value',
+                  //   );
+                  // } catch (e) {
+                  //   _logger.e('Failed to update Firebase: $e');
+                  // }
                 },
               ),
               const Text(
