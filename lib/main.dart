@@ -11,13 +11,13 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_database/firebase_database.dart';
+// import 'package:firebase_core/firebase_core.dart';
+// import 'package:firebase_database/firebase_database.dart';
 
 // Firebase reference
-final DatabaseReference _settingsRef = FirebaseDatabase.instance.ref(
-  'settings/connection',
-);
+// final DatabaseReference _settingsRef = FirebaseDatabase.instance.ref(
+//   'settings/connection',
+// );
 
 var _logger = Logger();
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
@@ -242,7 +242,7 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
 
     _requestTimer = Timer.periodic(const Duration(seconds: 5), (timer) async {
       try {
-        String body = _useFirebase.toString();
+        String body = "false"; //_useFirebase.toString();
         final url = Uri.parse('http://esp8266-device.local/info');
         final response = await http.post(
           url,
@@ -349,9 +349,9 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
     startAutoRequest();
     loadConnection();
     // Initialize Firebase if using Firebase
-    if (_useFirebase) {
-      Firebase.initializeApp();
-    }
+    // if (_useFirebase) {
+    //   Firebase.initializeApp();
+    // }
   }
 
   @override
@@ -1254,16 +1254,16 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
                   sendCommand(_useFirebase ? "CONNF" : "CONNL");
 
                   // Update Firebase Realtime Database
-                  try {
-                    await FirebaseDatabase.instance
-                        .ref('settings/connection/mode')
-                        .set(value);
-                    _logger.i(
-                      'Firebase settings/connection/mode updated: $value',
-                    );
-                  } catch (e) {
-                    _logger.e('Failed to update Firebase: $e');
-                  }
+                  // try {
+                  //   await FirebaseDatabase.instance
+                  //       .ref('settings/connection/mode')
+                  //       .set(value);
+                  //   _logger.i(
+                  //     'Firebase settings/connection/mode updated: $value',
+                  //   );
+                  // } catch (e) {
+                  //   _logger.e('Failed to update Firebase: $e');
+                  // }
                 },
               ),
               const Text(
