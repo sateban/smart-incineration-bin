@@ -267,14 +267,14 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
               progressValue = 0.4;
             }
 
-            isGasConcentrated = gas > 100;
+            isGasConcentrated = gas > 100 && isTimerStarted;
 
             if(!isGasConcentrated){
               isGasNotifShown = false;
             }
 
             if(!isGasNotifShown && isGasConcentrated){
-              showNotification("Smart Hybrid Eco Bin", "Process completed");
+              showNotification("Smart Hybrid Eco Bin Alert", "Elevated gas concentration detected. It is recommended to turn off the device to reduce pressure build.");
               isGasNotifShown = true;
             }
 
