@@ -520,28 +520,28 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
         // ], 
       ),
       body: pages[_selectedIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: (index) => setState(() => _selectedIndex = index),
-        selectedItemColor: const Color.fromARGB(255, 0, 0, 0),
-        unselectedItemColor: mutedForeground,
-        backgroundColor: cardColor,
-        showUnselectedLabels: true,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            label: 'Home',
-          ),
-          // BottomNavigationBarItem(
-          //   icon: Icon(Icons.bar_chart_outlined),
-          //   label: 'Stats',
-          // ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings_outlined),
-            label: 'Settings',
-          ),
-        ],
-      ),
+      // bottomNavigationBar: BottomNavigationBar(
+      //   currentIndex: _selectedIndex,
+      //   onTap: (index) => setState(() => _selectedIndex = index),
+      //   selectedItemColor: const Color.fromARGB(255, 0, 0, 0),
+      //   unselectedItemColor: mutedForeground,
+      //   backgroundColor: cardColor,
+      //   showUnselectedLabels: true,
+      //   items: const [
+      //     BottomNavigationBarItem(
+      //       icon: Icon(Icons.home_outlined),
+      //       label: 'Home',
+      //     ),
+      //     // BottomNavigationBarItem(
+      //     //   icon: Icon(Icons.bar_chart_outlined),
+      //     //   label: 'Stats',
+      //     // ),
+      //     BottomNavigationBarItem(
+      //       icon: Icon(Icons.settings_outlined),
+      //       label: 'Settings',
+      //     ),
+      //   ],
+      // ),
     );
   }
 
@@ -1099,8 +1099,8 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
                             );
 
                             bool start = await sendCommand(
-                              // "timer:${timerValue.toInt() * 60}",
-                              "timer:${10}",
+                              "timer:${timerValue.toInt() * 60}",
+                              // "timer:${10}",
                             );
                             _logger.i("Start Status: $start");
 
@@ -1109,8 +1109,8 @@ class _SmartBinDashboardState extends State<SmartBinDashboard> {
                               smokeValue = "ONGOING";
                               // progressValue = 0.25;
                               progressValue = 0.3;
-                              // startTimer(timerValue.toInt() * 60);
-                              startTimer(10);
+                              startTimer(timerValue.toInt() * 60);
+                              // startTimer(10);
                               showNotification(
                                 "Smart Hybrid Eco Bin",
                                 "Device has started",
